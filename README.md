@@ -1,6 +1,6 @@
 # YouTube Playlist Processor with Gemini Refinement
 
-![](Image/Image2.jpg)
+![Alt text for the image](Image/Image2.jpg)
 
 
 This Python application extracts transcripts from YouTube playlists and refines them using the Google Gemini API. It takes a YouTube playlist URL as input, extracts transcripts for each video, and then uses Gemini to reformat and improve the readability of the combined transcript. The output is saved as a text file.
@@ -14,7 +14,7 @@ So you can have a neatly formatted book out of a YouTube playlist!
 *   Selectable Gemini models.
 *   Output to markdown file.
 *   
-![](Image/Image.jpg)
+![Alt text for the image](Image/Image.jpg)
 
 
 ## Features
