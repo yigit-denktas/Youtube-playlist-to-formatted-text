@@ -12,11 +12,12 @@ So you can have a neatly formatted book out of a YouTube playlist!
 *   User-friendly PyQt5 graphical interface.
 *   Selectable Gemini models.
 *   Output to markdown file.
+<br><br>
+![Alt text for the image](Images/image.jpg)<br><br>
+
+![Alt text for the image](Images/image2.png)
 
 
-![Alt text for the image](Images/image2.png)<br><br>
-
-![Alt text for the image](Images/image.jpg)
 
 
 ## Features
