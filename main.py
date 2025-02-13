@@ -254,11 +254,11 @@ class MainWindow(QMainWindow):
             msg_box.exec_()
             return False
 
-        if not self.gemini_file_input.text().endswith((".txt", ".md")):
+        if not self.gemini_file_input.text().endswith(".txt"):
             msg_box = QMessageBox()
             msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;") # Style QMessageBox
             msg_box.setIcon(QMessageBox.Warning)
-            msg_box.setText("Gemini output file must be a .txt or .md file")
+            msg_box.setText("Gemini output file must be a .txt file")
             msg_box.setWindowTitle("Invalid File")
             msg_box.exec_()
             return False
@@ -414,10 +414,10 @@ class MainWindow(QMainWindow):
     def select_output_file(self, title, field):
         options = QFileDialog.Options()
         file_path, _ = QFileDialog.getSaveFileName(
-            self, title, "", "Text Files (*.txt);;Markdown Files (*.md);;All Files (*)", options=options)
+            self, title, "", "Text Files (*.txt);;All Files (*)", options=options)
         if file_path:
-            if not (file_path.endswith(".txt") or file_path.endswith(".md")):
-                file_path += ".md"  # Default to .md if no extension is given
+            if not (file_path.endswith(".txt")):
+                file_path += ".txt"  # Default to .txt if no extension is given
             field.setText(file_path)
 
 
