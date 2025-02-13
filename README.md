@@ -1,7 +1,7 @@
 # YouTube Playlist Processor using Gemini API
 <br>
 <br>
-✅ Added Language Support, now the output file is in the language of user's input.(might not be as good as english, test it yourself!)
+✅ Added Language Support, now the output file is in the language of user's input.(might not be as good as english, test it yourself!)<br>
 ✅ Added single video url support, no need to put it in a playlist.
 
 <br>
