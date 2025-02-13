@@ -254,7 +254,7 @@ class MainWindow(QMainWindow):
             msg_box.exec_()
             return False
 
-        if not self.gemini_file_input.text().endswith(".txt",".md"):
+        if not self.gemini_file_input.text().endswith((".txt", ".md")):
             msg_box = QMessageBox()
             msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;") # Style QMessageBox
             msg_box.setIcon(QMessageBox.Warning)
