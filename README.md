@@ -8,7 +8,7 @@ So you can have a neatly formatted book out of a YouTube playlist!
 I persoanlly use it to convert large YouTube playlists containing dozens of long videos into a very large organized markdown file to give it as input to **NotebookLM** as one source.
 
 
-- Batch processing of entire playlists
+*   Batch processing of entire playlists
 *   Refine transcripts using Google Gemini API for improved formatting and readability.
 *   User-friendly PyQt5 graphical interface.
 *   Selectable Gemini models.
