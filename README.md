@@ -6,7 +6,7 @@ This Python application extracts transcripts from YouTube playlists and refines 
 <br><br>
 So you can have a neatly formatted book out of a YouTube playlist!
 I persoanlly use it to convert large YouTube playlists containing dozens of long videos into a very large organized markdown file to give it as input to **NotebookLM** as one source.
-
+<br><br>
 
 *   Batch processing of entire playlists
 *   Refine transcripts using Google Gemini API for improved formatting and readability.
