@@ -53,3 +53,5 @@ pip install -r requirements.txt
     *   You can select a Gemini model.
     *   Wait for the processing to complete. Progress will be shown in the progress bar and status display.
     *   The output files will be saved to the locations you specified.
+  
+> YouTube playlist used for example file : https://www.youtube.com/playlist?list=PLmHVyfmcRKyx1KSoobwukzf1Nf-Y97Rw0
