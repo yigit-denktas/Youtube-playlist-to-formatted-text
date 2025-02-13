@@ -21,12 +21,12 @@ class MainWindow(QMainWindow):
         self.extraction_thread = None
         self.gemini_thread = None
         self.is_processing = False
-        self.available_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-thinking-exp-01-21"] # Static model list
+        self.available_models = ["gemini-1.5-flash", "gemini-1.5-pro","gemini-2.0-flash", "gemini-2.0-flash-thinking-exp-01-21"] # Static model list
         self.selected_model_name = "gemini-1.5-flash" # Default model
 
 
     def initUI(self):
-        # ... (rest of initUI is the same as before)
+        
         self.setWindowTitle("YouTube Playlist Transcript & Gemini Refinement Extractor")
         self.setMinimumSize(900, 850)
         self.apply_dark_mode()
@@ -67,11 +67,21 @@ class MainWindow(QMainWindow):
         url_layout.addWidget(self.url_input)
         input_layout.addLayout(url_layout)
 
+        # Language Input
+        language_layout = QVBoxLayout()
+        language_label = QLabel("Output Language:")
+        language_label.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        language_label.setStyleSheet("color: #ecf0f1;")
+        self.language_input = QLineEdit()
+        self.language_input.setPlaceholderText("e.g., English, Spanish, French")
+        self.language_input.setFont(QFont("Segoe UI", 11))
+        self.language_input.setStyleSheet(self.get_input_style())
+        language_layout.addWidget(language_label)
+        language_layout.addWidget(self.language_input)
+        input_layout.addLayout(language_layout)
+        
 
 
- 
-        
-        
         # File Inputs
         self.create_file_input(input_layout, "Transcript Output:", "Browse Transcript",
                              "transcript_file_input", self.select_transcript_output_file)
@@ -272,6 +282,15 @@ class MainWindow(QMainWindow):
             msg_box.exec_()
             return False
 
+        if not self.language_input.text().strip(): # Validate Language Input
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;") # Style QMessageBox
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setText("Please specify the output language")
+            msg_box.setWindowTitle("Language Required")
+            msg_box.exec_()
+            return False
+
         return True
 
     def set_processing_state(self, processing):
@@ -280,7 +299,7 @@ class MainWindow(QMainWindow):
         self.cancel_button.setEnabled(processing)
 
         inputs = [self.url_input, self.transcript_file_input,
-                self.gemini_file_input, self.api_key_input]
+                self.gemini_file_input, self.api_key_input, self.language_input]
         for input_field in inputs:
             input_field.setReadOnly(processing)
 
@@ -298,7 +317,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(model_combo)
         widget = QWidget()
         widget.setLayout(layout)
-        msg_box.layout().addWidget(widget, 1, 0, msg_box.layout().rowCount(), 1) # Add combobox to messagebox layout
+        msg_box.layout().addWidget(widget, 1, 0, msg_box.layout().rowCount(), 1) 
 
         ok_button = msg_box.addButton(QMessageBox.Ok)
         cancel_button = msg_box.addButton(QMessageBox.Cancel)
@@ -345,11 +364,14 @@ class MainWindow(QMainWindow):
         self.progress_bar.setValue(0) # Reset progress bar for Gemini processing
         self.status_display.append("<font color='#2ecc71'>Transcript extraction complete! Starting Gemini processing...</font>")
 
+        output_language = self.language_input.text() # Get language from input field
+
         self.gemini_thread = GeminiProcessingThread(
             transcript_file,
             self.gemini_file_input.text(),
             self.api_key_input.text(),
-            self.selected_model_name # Pass selected model name
+            self.selected_model_name, # Pass selected model name
+            output_language # Pass output language
         )
 
         self.gemini_thread.progress_update.connect(self.update_gemini_progress) # Use separate progress update for Gemini
@@ -416,7 +438,7 @@ class MainWindow(QMainWindow):
         file_path, _ = QFileDialog.getSaveFileName(
             self, title, "", "Text Files (*.txt);;All Files (*)", options=options)
         if file_path:
-            if not (file_path.endswith(".txt")):
+            if not (file_path.endswith(".txt") ):
                 file_path += ".txt"  # Default to .txt if no extension is given
             field.setText(file_path)
 
@@ -474,12 +496,13 @@ class GeminiProcessingThread(QThread):
     processing_complete = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
 
-    def __init__(self, input_file, output_file, api_key, selected_model_name):
+    def __init__(self, input_file, output_file, api_key, selected_model_name, output_language): 
         super().__init__()
         self.input_file = input_file
         self.output_file = output_file
         self.api_key = api_key
         self.selected_model_name = selected_model_name # Store selected model name
+        self.output_language = output_language # Store output language
         self._is_running = True
         logging.basicConfig(filename='gemini_processing.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -510,11 +533,15 @@ class GeminiProcessingThread(QThread):
                     if previous_response:
                         context_prompt = (
                             "The following text is a continuation... "
-                            f"Previous response:\n{previous_response}\n\nNew text to process:\n"
+                            f"Previous response:\n{previous_response}\n\nNew text to process(Do Not Repeat the Previous response:):\n"
                         )
                     else:
                         context_prompt = ""
-                    full_prompt = f"{context_prompt}{self.FIXED_PROMPT}\n\n{chunk}"
+
+                    # Replace [Language] with user specified language
+                    formatted_prompt = self.FIXED_PROMPT.replace("[Language]", self.output_language)
+                    full_prompt = f"{context_prompt}{formatted_prompt}\n\n{chunk}"
+
                     model = genai.GenerativeModel(self.selected_model_name) # Use selected model
 
                     self.status_update.emit(f"Generating Gemini response for Video {video_index + 1}/{total_videos}, Chunk {chunk_index + 1}/{len(video_transcript_chunks)}, please wait...")
@@ -565,6 +592,7 @@ The goal is to make the content easier to read and process by:
 Ensure the text remains informative, capturing the original intent, tone,
 and details while presenting the information in a format optimized for analysis by both humans and AI.
 REMEMBER that Details are important, DO NOT overlook Any details, even small ones.
+All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
 Text:
 """
     )
