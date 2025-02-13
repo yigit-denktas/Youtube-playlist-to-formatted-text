@@ -56,11 +56,11 @@ class MainWindow(QMainWindow):
 
         # Playlist URL Input
         url_layout = QVBoxLayout()
-        url_label = QLabel("YouTube Playlist URL:")
+        url_label = QLabel("YouTube URL (Playlist or Video):")
         url_label.setFont(QFont("Segoe UI", 12, QFont.Bold))
         url_label.setStyleSheet("color: #ecf0f1;")
         self.url_input = QLineEdit()
-        self.url_input.setPlaceholderText("https://www.youtube.com/playlist?list=...")
+        self.url_input.setPlaceholderText("Enter YouTube playlist or video URL (e.g., https://www.youtube.com/playlist?list=... or https://www.youtube.com/watch?v=...)")
         self.url_input.setFont(QFont("Segoe UI", 11))
         self.url_input.setStyleSheet(self.get_input_style())
         url_layout.addWidget(url_label)
@@ -246,7 +246,11 @@ class MainWindow(QMainWindow):
         self.move(frame.topLeft())
 
     def validate_inputs(self):
-        if not self.url_input.text().startswith("https://www.youtube.com/playlist"):
+        url_text = self.url_input.text() # ADD THIS LINE: Get the text from the input field
+
+        if not (url_text.startswith("https://www.youtube.com/playlist") or
+            url_text.startswith("https://www.youtube.com/watch?v=")):
+
             msg_box = QMessageBox()
             msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;") # Style QMessageBox
             msg_box.setIcon(QMessageBox.Warning)
@@ -457,15 +461,22 @@ class TranscriptExtractionThread(QThread):
 
     def run(self):
         try:
-            playlist = Playlist(self.playlist_url)
-            video_urls = playlist.video_urls
-            total_videos = len(video_urls)
-            playlist_name = playlist.title # Get playlist name
+            url = self.playlist_url # it could be playlist or video URL
 
-            with open(self.output_file, 'w', encoding='utf-8') as f:  # Open in write mode to clear file for new extraction
-                f.write(f"Playlist Name: {playlist_name}\n\n") # Write playlist name at the beginning
+            if "playlist?list=" in url: 
+                playlist = Playlist(url)
+                video_urls = playlist.video_urls
+                total_videos = len(video_urls)
+                playlist_name = playlist.title # Get playlist name
+            elif "watch?v=" in url: 
+                video_urls = [url] # Treat it as a playlist of one video
+                total_videos = 1
+                playlist_name = "Single Video"
+
+            with open(self.output_file, 'w', encoding='utf-8') as f:
+                f.write(f"Playlist Name: {playlist_name}\n\n") 
                 for index, video_url in enumerate(video_urls, 1):
-                    if not self._is_running:  # Check for stop signal
+                    if not self._is_running:
                         return
 
                     try:
@@ -473,7 +484,7 @@ class TranscriptExtractionThread(QThread):
                         transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
                         transcript = ' '.join([transcript['text'] for transcript in transcript_list])
 
-                        f.write(f"Video URL: {video_url}\n") # Changed from Video Title to URL to match Gemini split
+                        f.write(f"Video URL: {video_url}\n")
                         f.write(transcript + '\n\n')
 
                         progress_percent = int((index / total_videos) * 100)
