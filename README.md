@@ -50,7 +50,7 @@ pip install -r requirements.txt
 ```
 ## How does it work?
 * First, the transcript of every video in the playlist is fetched.
-* since gemini api doesnt have unlimited context window for input and output, the text for each video gets divided into chunks(right now, chunk size is set to 3000 after testing, but it can be changed)
+* since gemini api doesnt have unlimited context window for input and output, the text for each video gets divided into chunks(right now, chunk size is set to 3000 after testing, but it can be changed via the added slider)
 * Each text chunk is then sent to the Gemini API, along with a context prompt that includes the previously refined text. This helps maintain consistency and coherence across chunks.
 * The refined output from Gemini for each chunk is appended to the final output file.
 * This process is repeated for every video in the playlist, resulting in a single, refined transcript output file for the entire playlist.
