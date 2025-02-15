@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QLineEdit, QPushButton, QProgressBar, QTextEdit, QFileDialog, QMessageBox,
-                             QComboBox) # Import QComboBox
+                             QComboBox, QSlider) # Import QComboBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFont, QColor
 from datetime import datetime
@@ -25,11 +25,17 @@ class MainWindow(QMainWindow):
         self.selected_model_name = "gemini-1.5-flash" # Default model
 
 
+    @pyqtSlot(int) # Indicate it's a slot and expects an integer (slider value)
+    def update_chunk_size_label(self, value):
+        self.chunk_size_value_label.setText(str(value)) # Update the label text with the new slider value
+
+
     def initUI(self):
         
         self.setWindowTitle("YouTube Playlist Transcript & Gemini Refinement Extractor")
         self.setMinimumSize(900, 850)
         self.apply_dark_mode()
+        self.showFullScreen()
 
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(20, 20, 20, 20)
@@ -41,7 +47,7 @@ class MainWindow(QMainWindow):
         title_label.setAlignment(Qt.AlignCenter)
         title_label.setStyleSheet("""
             color: #2ecc71;
-            padding: 15px;
+            padding: 10px;
             border-radius: 8px;
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                 stop:0 #2c3e50, stop:1 #3498db);
@@ -50,18 +56,18 @@ class MainWindow(QMainWindow):
 
         # Input Container
         input_container = QWidget()
-        input_container.setStyleSheet("background-color: #2c3e50; border-radius: 10px; padding: 15px;")
+        input_container.setStyleSheet("background-color: #2c3e50; border-radius: 10px; padding: 10px;")
         input_layout = QVBoxLayout(input_container)
         input_layout.setSpacing(12)
 
         # Playlist URL Input
         url_layout = QVBoxLayout()
         url_label = QLabel("YouTube URL (Playlist or Video):")
-        url_label.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        url_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
         url_label.setStyleSheet("color: #ecf0f1;")
         self.url_input = QLineEdit()
         self.url_input.setPlaceholderText("Enter YouTube playlist or video URL (e.g., https://www.youtube.com/playlist?list=... or https://www.youtube.com/watch?v=...)")
-        self.url_input.setFont(QFont("Segoe UI", 11))
+        self.url_input.setFont(QFont("Segoe UI", 9))
         self.url_input.setStyleSheet(self.get_input_style())
         url_layout.addWidget(url_label)
         url_layout.addWidget(self.url_input)
@@ -70,32 +76,89 @@ class MainWindow(QMainWindow):
         # Language Input
         language_layout = QVBoxLayout()
         language_label = QLabel("Output Language:")
-        language_label.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        language_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
         language_label.setStyleSheet("color: #ecf0f1;")
         self.language_input = QLineEdit()
         self.language_input.setPlaceholderText("e.g., English, Spanish, French")
-        self.language_input.setFont(QFont("Segoe UI", 11))
+        self.language_input.setFont(QFont("Segoe UI", 9))
         self.language_input.setStyleSheet(self.get_input_style())
         language_layout.addWidget(language_label)
         language_layout.addWidget(self.language_input)
         input_layout.addLayout(language_layout)
+
+        # Chunk Size Slider Section
+        chunk_size_layout = QVBoxLayout()
+        
+        chunk_size_layout.setSpacing(1)  # Reduce spacing between widgets
+        chunk_size_layout.setContentsMargins(0, 0, 0, 0)  # Remove extra margins
+
+        chunk_size_label = QLabel("Chunk Size:")
+        chunk_size_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        chunk_size_label.setStyleSheet("color: #ecf0f1;")
+        chunk_size_layout.addWidget(chunk_size_label)
+
+        self.chunk_size_slider = QSlider(Qt.Horizontal) # Create the slider
+        self.chunk_size_slider.setMinimum(3000)         # Set minimum range
+        self.chunk_size_slider.setMaximum(50000)        # Set maximum range
+        self.chunk_size_slider.setValue(GeminiProcessingThread.chunk_size) # Set initial value (using default CHUNK_SIZE)
+        self.chunk_size_slider.valueChanged.connect(self.update_chunk_size_label)
+        self.chunk_size_slider.setStyleSheet("""
+    QSlider {
+        padding: 0px;  /* Removes extra padding */
+        margin: 0px;   /* Removes extra margins */
+    }
+    QSlider::groove:horizontal {
+        height: 4px; /* Adjust groove thickness */
+        margin: 0px; /* Remove any extra spacing */
+    }
+    QSlider::handle:horizontal {
+        width: 12px; /* Adjust handle size */
+        margin: -6px 0px; /* Align handle properly */
+    }
+""")
+        chunk_size_layout.addWidget(self.chunk_size_slider)
+
+
+        self.chunk_size_value_label = QLabel(str(GeminiProcessingThread.chunk_size)) # Create label to display value, initialize with default
+        self.chunk_size_value_label.setFont(QFont("Segoe UI", 10))
+        self.chunk_size_value_label.setStyleSheet("color: #ecf0f1;")
+        chunk_size_layout.addWidget(self.chunk_size_value_label)
+
+
+
+        chunk_size_description = QLabel("(Maximum number of words to be given to Gemini as content input per API call)(Default : 3000 words) Bigger chunk size: Fewer API calls, faster execution, but potentially lower detail (good for summarizing longer videos).")
+        chunk_size_description.setFont(QFont("Segoe UI", 8)) 
+        chunk_size_description.setStyleSheet("color: #bdc3c7;") 
+        chunk_size_description.setStyleSheet("""
+    color: #bdc3c7;
+    padding: 0px;
+    margin: 0px;
+""")
+        chunk_size_description.setWordWrap(True) 
+        chunk_size_layout.addWidget(chunk_size_description)
+
+
+        input_layout.addLayout(chunk_size_layout) 
+
+
+
         
 
 
         # File Inputs
-        self.create_file_input(input_layout, "Transcript Output:", "Browse Transcript",
+        self.create_file_input(input_layout, "   Transcript Output:", "Browse Transcript",
                              "transcript_file_input", self.select_transcript_output_file)
-        self.create_file_input(input_layout, "Gemini Output:", "  Browse Gemini   ",
+        self.create_file_input(input_layout, "   Gemini Output:", "  Browse Gemini   ",
                              "gemini_file_input", self.select_gemini_output_file)
 
         # API Key Input
         api_key_layout = QVBoxLayout()
         api_key_label = QLabel("Gemini API Key:")
-        api_key_label.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        api_key_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
         api_key_label.setStyleSheet("color: #ecf0f1;")
         self.api_key_input = QLineEdit()
         self.api_key_input.setPlaceholderText("Enter your Gemini API key")
-        self.api_key_input.setFont(QFont("Segoe UI", 11))
+        self.api_key_input.setFont(QFont("Segoe UI", 9))
         self.api_key_input.setStyleSheet(self.get_input_style())
         self.api_key_input.setEchoMode(QLineEdit.Password)
         api_key_layout.addWidget(api_key_label)
@@ -106,7 +169,7 @@ class MainWindow(QMainWindow):
 
         # Progress Section
         progress_container = QWidget()
-        progress_container.setStyleSheet("background-color: #34495e; border-radius: 10px; padding: 15px;")
+        progress_container.setStyleSheet("background-color: #34495e; border-radius: 10px; padding: 10px;")
         progress_layout = QVBoxLayout(progress_container)
 
         self.progress_bar = QProgressBar()
@@ -120,7 +183,7 @@ class MainWindow(QMainWindow):
                 border-radius: 5px;
                 text-align: center;
                 color: white;
-                font-size: 14px;
+                font-size: 12px;
             }
             QProgressBar::chunk {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
@@ -168,6 +231,8 @@ class MainWindow(QMainWindow):
 
     def create_file_input(self, parent_layout, label_text, button_text, field_name, handler):
         layout = QHBoxLayout()
+        
+        
         input_field = QLineEdit()
         input_field.setObjectName(field_name)
         input_field.setReadOnly(True)
@@ -181,14 +246,18 @@ class MainWindow(QMainWindow):
         layout.addWidget(input_field)
         layout.addWidget(button)
 
-        font = QFont("Segoe UI", 12, QFont.Bold)
+        font = QFont("Segoe UI", 10, QFont.Bold)
         label = QLabel(label_text)
-        font = QFont("Segoe UI", 12, QFont.Bold)  # Family, size, weight
+        font = QFont("Segoe UI", 10, QFont.Bold)  # Family, size, weight
         label.setFont(font)
 
 
+        # Alternatively, remove extra padding using stylesheet
+        label.setStyleSheet("padding: 0px;")
+
         parent_layout.addWidget(label)
         parent_layout.addLayout(layout)
+
 
         setattr(self, field_name, input_field)
 
@@ -216,7 +285,7 @@ class MainWindow(QMainWindow):
                 border: none;
                 border-radius: 5px;
                 padding: 12px 24px;
-                font-size: 14px;
+                font-size: 15px;
                 font-weight: bold;
             }}
             QPushButton:hover {{
@@ -369,13 +438,15 @@ class MainWindow(QMainWindow):
         self.status_display.append("<font color='#2ecc71'>Transcript extraction complete! Starting Gemini processing...</font>")
 
         output_language = self.language_input.text() # Get language from input field
+        current_chunk_size = self.chunk_size_slider.value()
 
         self.gemini_thread = GeminiProcessingThread(
             transcript_file,
             self.gemini_file_input.text(),
             self.api_key_input.text(),
             self.selected_model_name, # Pass selected model name
-            output_language # Pass output language
+            output_language, # Pass output language
+            chunk_size=current_chunk_size
         )
 
         self.gemini_thread.progress_update.connect(self.update_gemini_progress) # Use separate progress update for Gemini
@@ -461,20 +532,20 @@ class TranscriptExtractionThread(QThread):
 
     def run(self):
         try:
-            url = self.playlist_url # it could be playlist or video URL
+            url = self.playlist_url # Renamed for clarity, it could be playlist or video URL
 
-            if "playlist?list=" in url: 
+            if "playlist?list=" in url: # Check if it's a playlist URL
                 playlist = Playlist(url)
                 video_urls = playlist.video_urls
                 total_videos = len(video_urls)
                 playlist_name = playlist.title # Get playlist name
-            elif "watch?v=" in url: 
+            elif "watch?v=" in url: # Check if it's a single video URL
                 video_urls = [url] # Treat it as a playlist of one video
                 total_videos = 1
                 playlist_name = "Single Video"
 
             with open(self.output_file, 'w', encoding='utf-8') as f:
-                f.write(f"Playlist Name: {playlist_name}\n\n") 
+                f.write(f"Playlist Name: {playlist_name}\n\n") # Write playlist name (or "Single Video")
                 for index, video_url in enumerate(video_urls, 1):
                     if not self._is_running:
                         return
@@ -506,12 +577,14 @@ class GeminiProcessingThread(QThread):
     status_update = pyqtSignal(str)
     processing_complete = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
+    chunk_size = 3000
 
-    def __init__(self, input_file, output_file, api_key, selected_model_name, output_language): 
+    def __init__(self, input_file, output_file, api_key, selected_model_name, output_language, chunk_size): 
         super().__init__()
         self.input_file = input_file
         self.output_file = output_file
         self.api_key = api_key
+        self.chunk_size = chunk_size
         self.selected_model_name = selected_model_name # Store selected model name
         self.output_language = output_language # Store output language
         self._is_running = True
@@ -535,8 +608,9 @@ class GeminiProcessingThread(QThread):
                 self.status_update.emit(f"\nProcessing Video {video_index + 1}/{total_videos}: Preview: {video_chunk[:50]}...")
                 word_count = len(video_chunk.split())
                 self.status_update.emit(f"Word Count: {word_count} words")
+                self.status_update.emit(f"Chunk Size: {self.chunk_size} words")
 
-                video_transcript_chunks = self.split_text_into_chunks(video_chunk, self.CHUNK_SIZE)
+                video_transcript_chunks = self.split_text_into_chunks(video_chunk, self.chunk_size)
                 previous_response = ""
                 for chunk_index, chunk in enumerate(video_transcript_chunks):
                     if not self._is_running: # Check for stop signal inside inner loop
@@ -587,7 +661,7 @@ class GeminiProcessingThread(QThread):
             self.error_occurred.emit(error_message)
             logging.error(error_message)
 
-    CHUNK_SIZE = 3000
+    
     FIXED_PROMPT = (
         """
 Turn the following unorganized text into a well-structured, readable format while retaining EVERY detail, context, and nuance of the original content.
@@ -630,5 +704,5 @@ Text:
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.show()
+    window.showMaximized()
     sys.exit(app.exec_())
