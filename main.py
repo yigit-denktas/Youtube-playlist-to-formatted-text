@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
         chunk_size_layout.addWidget(chunk_size_label)
 
         self.chunk_size_slider = QSlider(Qt.Horizontal) # Create the slider
-        self.chunk_size_slider.setMinimum(3000)         # Set minimum range
+        self.chunk_size_slider.setMinimum(2000)         # Set minimum range
         self.chunk_size_slider.setMaximum(50000)        # Set maximum range
         self.chunk_size_slider.setValue(GeminiProcessingThread.chunk_size) # Set initial value (using default CHUNK_SIZE)
         self.chunk_size_slider.valueChanged.connect(self.update_chunk_size_label)
