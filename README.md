@@ -2,7 +2,12 @@
 <br>
 <br>
 ✅ Added Language Support, now the output file is in the language of user's input.(might not be as good as english, test it yourself!)<br>
-✅ Added single video url support, no need to put it in a playlist.
+✅ Added single video url support, no need to put it in a playlist.<br>
+✅ Added configurable chunk size for API calls.<br>
+
+>> Users can now control the chunk size used when processing transcripts with the Gemini API via a slider in the UI. This allows for customization of processing behavior:
+>>- Larger chunk sizes: Reduce the number of API calls, potentially speeding up execution and suitable for summarizing longer videos with less emphasis on fine details.
+>>- Smaller chunk sizes: Increase API calls but may preserve more detail and nuance, potentially beneficial for tasks requiring high fidelity output.
 
 <br>
 <br>
