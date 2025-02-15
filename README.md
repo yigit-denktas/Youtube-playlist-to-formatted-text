@@ -13,7 +13,7 @@
 >>  > - First 3000 words ➡➡processed by AI➡➡ Refined part 1
 >>  > - Second 3000 words +  Refined part 1 as context ➡➡processed by AI➡➡ Refinde part 2
 >>  > - final 2000 words +  Refined part 2 as context ➡➡processed by AI➡➡ Refinde part 3
->>  > - Refined part 1 + Refined part 1 + Refined part 1 = Final Formatted Text of the video!
+>>  > - Refined part 1 + Refined part 2 + Refined part 3 = Final Formatted Text of the video!
 
 <br>
 <br>
