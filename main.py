@@ -274,9 +274,9 @@ Text:"""
 
 
         # File Inputs
-        self.create_file_input(input_layout, "   Transcript Output:", "Browse Transcript",
+        self.create_file_input(input_layout, "   Transcript Output:", "Choose File",
                              "transcript_file_input", self.select_transcript_output_file)
-        self.create_file_input(input_layout, "   Gemini Output:", "  Browse Gemini   ",
+        self.create_file_input(input_layout, "   Gemini Output:", "Choose File",
                              "gemini_file_input", self.select_gemini_output_file)
 
         # API Key Input
