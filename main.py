@@ -16,14 +16,134 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
-        self.initUI()
+        self.prompts = {
+
+            "Balanced and Detailed": """Turn the following unorganized text into a well-structured, readable format while retaining EVERY detail, context, and nuance of the original content.
+            Refine the text to improve clarity, grammar, and coherence WITHOUT cutting, summarizing, or omitting any information.
+            The goal is to make the content easier to read and process by:
+
+            - Organizing the content into logical sections with appropriate subheadings.
+            - Using bullet points or numbered lists where applicable to present facts, stats, or comparisons.
+            - Highlighting key terms, names, or headings with bold text for emphasis.
+            - Preserving the original tone, humor, and narrative style while ensuring readability.
+            - Adding clear separators or headings for topic shifts to improve navigation.
+
+            Ensure the text remains informative, capturing the original intent, tone,
+            and details while presenting the information in a format optimized for analysis by both humans and AI.
+            REMEMBER that Details are important, DO NOT overlook Any details, even small ones.
+            All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
+            Text:
+            """,
+
+            "Summary": """Summarize the following transcript into a concise and informative summary. 
+            Identify the core message, main arguments, and key pieces of information presented in the video.
+            The summary should capture the essence of the video's content in a clear and easily understandable way.
+            Aim for a summary that is shorter than the original transcript but still accurately reflects its key points.  
+            Focus on conveying the most important information and conclusions.
+All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
+Text: """,
+            "Educational": """Transform the following transcript into a comprehensive educational text, resembling a textbook chapter. Structure the content with clear headings, subheadings, and bullet points to enhance readability and organization for educational purposes.
+
+Crucially, identify any technical terms, jargon, or concepts that are mentioned but not explicitly explained within the transcript. For each identified term, provide a concise definition (no more than two sentences) formatted as a blockquote.  Integrate these definitions strategically within the text, ideally near the first mention of the term, to enhance understanding without disrupting the flow.
+
+Ensure the text is highly informative, accurate, and retains all the original details and nuances of the transcript. The goal is to create a valuable educational resource that is easy to study and understand.
+
+All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
+
+Text:""",
+            "Narrative Rewriting": """Rewrite the following transcript into an engaging narrative or story format. Transform the factual or conversational content into a more captivating and readable piece, similar to a short story or narrative article.
+
+While rewriting, maintain a close adherence to the original subjects and information presented in the video. Do not deviate significantly from the core topics or introduce unrelated elements.  The goal is to enhance engagement and readability through storytelling techniques without altering the fundamental content or message of the video.  Use narrative elements like descriptive language, scene-setting (if appropriate), and a compelling flow to make the information more accessible and enjoyable.
+
+All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
+
+Text:""",
+            "Q&A Generation": """Generate a set of questions and answers based on the following transcript for self-assessment or review.  For each question, create a corresponding answer.
+
+Format each question as a level 3 heading using Markdown syntax (### Question Text). Immediately following each question, provide the answer.  This format is designed for foldable sections, allowing users to easily hide and reveal answers for self-testing.
+
+Ensure the questions are relevant to the key information and concepts in the transcript and that the answers are accurate and comprehensive based on the video content.
+
+All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
+
+Text:"""
+        }
+        self.category_chunk_sizes = {
+            "Balanced and Detailed": 3000,
+            "Summary": 10000,  # Larger chunk size for summarization
+            "Educational": 3000, # Default chunk size for detailed output
+            "Narrative Rewriting": 5000, # Default chunk size
+            "Q&A Generation": 3000   # Default chunk size
+        }
+        self.selected_category = "Balanced and Detailed" # Default Category
+        
 
         self.extraction_thread = None
         self.gemini_thread = None
         self.is_processing = False
         self.available_models = ["gemini-1.5-flash", "gemini-1.5-pro","gemini-2.0-flash", "gemini-2.0-flash-thinking-exp-01-21"] # Static model list
-        self.selected_model_name = "gemini-1.5-flash" # Default model
+        self.selected_model_name = "gemini-2.0-flash-thinking-exp-01-21" # Default model
 
+        self.initUI()
+        
+        
+    def get_combobox_style(self):
+        return """
+            QComboBox {
+                background-color: #34495e;
+                border: 2px solid #3498db;
+                border-radius: 5px;
+                color: #ecf0f1;
+                padding: 0px;
+                font-size: 10pt;
+            }
+            QComboBox:!editable, QComboBox::drop-down:editable {
+                 background: #34495e;
+            }
+
+            QComboBox:on { /* shift the text when the popup opens */
+                border-bottom-left-radius: 0px;
+                border-bottom-right-radius: 0px;
+            }
+
+            QComboBox::drop-down {
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: 20px;
+
+                border-left-width: 1px;
+                border-left-color: darkgray;
+                border-left-style: solid; /* just a single line */
+                border-top-right-radius: 3px; /* same radius as the QComboBox */
+                border-bottom-right-radius: 3px;
+            }
+
+            QComboBox::down-arrow {
+                image: url(down_arrow.png); /* Replace with your arrow image if you want a custom one */
+            }
+
+            QComboBox::down-arrow:on { /* shift the arrow when popup is open */
+                top: 1px;
+                left: 1px;
+            }
+
+            QComboBox QAbstractItemView {
+                border: 2px solid #3498db;
+                border-radius: 5px;
+                background-color: #2c3e50;
+                color: #ecf0f1;
+                selection-background-color: #3498db;
+                selection-color: #ecf0f1;
+            }
+        """
+
+    def category_changed(self, index):
+        category_name = self.category_combo.itemText(index) # Get selected category name
+        self.selected_category = category_name # Update selected category
+        if category_name in self.category_chunk_sizes:
+            suggested_chunk_size = self.category_chunk_sizes[category_name]
+            self.chunk_size_slider.setValue(suggested_chunk_size) # Set slider value
+            self.update_chunk_size_label(suggested_chunk_size) # Update label
 
     @pyqtSlot(int) # Indicate it's a slot and expects an integer (slider value)
     def update_chunk_size_label(self, value):
@@ -58,7 +178,7 @@ class MainWindow(QMainWindow):
         input_container = QWidget()
         input_container.setStyleSheet("background-color: #2c3e50; border-radius: 10px; padding: 10px;")
         input_layout = QVBoxLayout(input_container)
-        input_layout.setSpacing(12)
+        input_layout.setSpacing(1)
 
         # Playlist URL Input
         url_layout = QVBoxLayout()
@@ -86,59 +206,67 @@ class MainWindow(QMainWindow):
         language_layout.addWidget(self.language_input)
         input_layout.addLayout(language_layout)
 
+        # Style Selection
+        category_layout = QVBoxLayout()
+        category_label = QLabel("Refinement Style:")
+        category_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        category_label.setStyleSheet("color: #ecf0f1;")
+        self.category_combo = QComboBox()
+        self.category_combo.addItems(list(self.prompts.keys())) 
+        self.category_combo.setCurrentText(self.selected_category) 
+        self.category_combo.currentIndexChanged.connect(self.category_changed) 
+        self.category_combo.setStyleSheet(self.get_combobox_style())
+        category_layout.addWidget(category_label)
+        category_layout.addWidget(self.category_combo)
+        input_layout.addLayout(category_layout)
         # Chunk Size Slider Section
         chunk_size_layout = QVBoxLayout()
+
         
-        chunk_size_layout.setSpacing(1)  # Reduce spacing between widgets
-        chunk_size_layout.setContentsMargins(0, 0, 0, 0)  # Remove extra margins
+        chunk_size_layout.setSpacing(2)  
+        chunk_size_layout.setContentsMargins(5, 5, 5, 5)  # Add modest margins
 
         chunk_size_label = QLabel("Chunk Size:")
         chunk_size_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        chunk_size_label.setStyleSheet("color: #ecf0f1;")
+        chunk_size_label.setStyleSheet("color: #ecf0f1; margin-bottom: 4px;")  # Add bottom margin
         chunk_size_layout.addWidget(chunk_size_label)
 
-        self.chunk_size_slider = QSlider(Qt.Horizontal) # Create the slider
-        self.chunk_size_slider.setMinimum(2000)         # Set minimum range
-        self.chunk_size_slider.setMaximum(50000)        # Set maximum range
-        self.chunk_size_slider.setValue(GeminiProcessingThread.chunk_size) # Set initial value (using default CHUNK_SIZE)
+        self.chunk_size_slider = QSlider(Qt.Horizontal)
+        self.chunk_size_slider.setMinimum(2000)
+        self.chunk_size_slider.setMaximum(50000)
+        self.chunk_size_slider.setValue(GeminiProcessingThread.chunk_size)
         self.chunk_size_slider.valueChanged.connect(self.update_chunk_size_label)
         self.chunk_size_slider.setStyleSheet("""
-    QSlider {
-        padding: 0px;  /* Removes extra padding */
-        margin: 0px;   /* Removes extra margins */
-    }
-    QSlider::groove:horizontal {
-        height: 4px; /* Adjust groove thickness */
-        margin: 0px; /* Remove any extra spacing */
-    }
-    QSlider::handle:horizontal {
-        width: 12px; /* Adjust handle size */
-        margin: -6px 0px; /* Align handle properly */
-    }
-""")
+            QSlider {
+                padding: 0px;  # Reduced padding
+            }
+            QSlider::groove:horizontal {
+                height: 4px;
+                margin: 2px 0;  # Add vertical margin
+            }
+            QSlider::handle:horizontal {
+                width: 12px;
+                margin: -6px 0px;
+            }
+        """)
         chunk_size_layout.addWidget(self.chunk_size_slider)
 
-
-        self.chunk_size_value_label = QLabel(str(GeminiProcessingThread.chunk_size)) # Create label to display value, initialize with default
+        self.chunk_size_value_label = QLabel(str(GeminiProcessingThread.chunk_size))
         self.chunk_size_value_label.setFont(QFont("Segoe UI", 10))
-        self.chunk_size_value_label.setStyleSheet("color: #ecf0f1;")
+        self.chunk_size_value_label.setStyleSheet("color: #ecf0f1; margin-top: 4px;")  # Add top margin
         chunk_size_layout.addWidget(self.chunk_size_value_label)
 
-
-
         chunk_size_description = QLabel("(Maximum number of words to be given to Gemini as content input per API call)(Default : 3000 words) Bigger chunk size: Fewer API calls, faster execution, but potentially lower detail (good for summarizing longer videos).")
-        chunk_size_description.setFont(QFont("Segoe UI", 8)) 
-        chunk_size_description.setStyleSheet("color: #bdc3c7;") 
+        chunk_size_description.setFont(QFont("Segoe UI", 8))
         chunk_size_description.setStyleSheet("""
-    color: #bdc3c7;
-    padding: 0px;
-    margin: 0px;
-""")
-        chunk_size_description.setWordWrap(True) 
+            color: #bdc3c7;
+            margin-top: 18px;  # Add top margin
+            padding: 2px;
+        """)
+        chunk_size_description.setWordWrap(True)
         chunk_size_layout.addWidget(chunk_size_description)
 
-
-        input_layout.addLayout(chunk_size_layout) 
+        input_layout.addLayout(chunk_size_layout)
 
 
 
@@ -252,7 +380,7 @@ class MainWindow(QMainWindow):
         label.setFont(font)
 
 
-        # Alternatively, remove extra padding using stylesheet
+        
         label.setStyleSheet("padding: 0px;")
 
         parent_layout.addWidget(label)
@@ -268,7 +396,7 @@ class MainWindow(QMainWindow):
                 border: 2px solid #3498db;
                 border-radius: 5px;
                 color: #ecf0f1;
-                padding: 8px;
+                padding: 2px;
             }
             QLineEdit:disabled {
                 background: #2c3e50;
@@ -439,14 +567,15 @@ class MainWindow(QMainWindow):
 
         output_language = self.language_input.text() # Get language from input field
         current_chunk_size = self.chunk_size_slider.value()
-
+        selected_prompt = self.prompts[self.selected_category]
         self.gemini_thread = GeminiProcessingThread(
             transcript_file,
             self.gemini_file_input.text(),
             self.api_key_input.text(),
             self.selected_model_name, # Pass selected model name
             output_language, # Pass output language
-            chunk_size=current_chunk_size
+            chunk_size=current_chunk_size,
+            prompt=selected_prompt
         )
 
         self.gemini_thread.progress_update.connect(self.update_gemini_progress) # Use separate progress update for Gemini
@@ -578,8 +707,9 @@ class GeminiProcessingThread(QThread):
     processing_complete = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
     chunk_size = 3000
+    
 
-    def __init__(self, input_file, output_file, api_key, selected_model_name, output_language, chunk_size): 
+    def __init__(self, input_file, output_file, api_key, selected_model_name, output_language, chunk_size,prompt): 
         super().__init__()
         self.input_file = input_file
         self.output_file = output_file
@@ -587,6 +717,7 @@ class GeminiProcessingThread(QThread):
         self.chunk_size = chunk_size
         self.selected_model_name = selected_model_name # Store selected model name
         self.output_language = output_language # Store output language
+        self.prompt = prompt
         self._is_running = True
         logging.basicConfig(filename='gemini_processing.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -609,6 +740,7 @@ class GeminiProcessingThread(QThread):
                 word_count = len(video_chunk.split())
                 self.status_update.emit(f"Word Count: {word_count} words")
                 self.status_update.emit(f"Chunk Size: {self.chunk_size} words")
+                
 
                 video_transcript_chunks = self.split_text_into_chunks(video_chunk, self.chunk_size)
                 previous_response = ""
@@ -624,7 +756,7 @@ class GeminiProcessingThread(QThread):
                         context_prompt = ""
 
                     # Replace [Language] with user specified language
-                    formatted_prompt = self.FIXED_PROMPT.replace("[Language]", self.output_language)
+                    formatted_prompt = self.prompt.replace("[Language]", self.output_language)
                     full_prompt = f"{context_prompt}{formatted_prompt}\n\n{chunk}"
 
                     model = genai.GenerativeModel(self.selected_model_name) # Use selected model
@@ -661,26 +793,6 @@ class GeminiProcessingThread(QThread):
             self.error_occurred.emit(error_message)
             logging.error(error_message)
 
-    
-    FIXED_PROMPT = (
-        """
-Turn the following unorganized text into a well-structured, readable format while retaining EVERY detail, context, and nuance of the original content.
-Refine the text to improve clarity, grammar, and coherence WITHOUT cutting, summarizing, or omitting any information.
-The goal is to make the content easier to read and process by:
-
-- Organizing the content into logical sections with appropriate subheadings.
-- Using bullet points or numbered lists where applicable to present facts, stats, or comparisons.
-- Highlighting key terms, names, or headings with bold text for emphasis.
-- Preserving the original tone, humor, and narrative style while ensuring readability.
-- Adding clear separators or headings for topic shifts to improve navigation.
-
-Ensure the text remains informative, capturing the original intent, tone,
-and details while presenting the information in a format optimized for analysis by both humans and AI.
-REMEMBER that Details are important, DO NOT overlook Any details, even small ones.
-All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
-Text:
-"""
-    )
 
     def split_text_into_chunks(self, text, chunk_size, min_chunk_size=500):
         words = text.split()
