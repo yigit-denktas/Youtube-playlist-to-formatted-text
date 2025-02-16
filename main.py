@@ -224,11 +224,11 @@ Text:"""
 
         
         chunk_size_layout.setSpacing(2)  
-        chunk_size_layout.setContentsMargins(5, 5, 5, 5)  # Add modest margins
+        chunk_size_layout.setContentsMargins(5, 5, 5, 5)  
 
         chunk_size_label = QLabel("Chunk Size:")
         chunk_size_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        chunk_size_label.setStyleSheet("color: #ecf0f1; margin-bottom: 4px;")  # Add bottom margin
+        chunk_size_label.setStyleSheet("color: #ecf0f1; margin-bottom: 4px;")  
         chunk_size_layout.addWidget(chunk_size_label)
 
         self.chunk_size_slider = QSlider(Qt.Horizontal)
@@ -253,14 +253,14 @@ Text:"""
 
         self.chunk_size_value_label = QLabel(str(GeminiProcessingThread.chunk_size))
         self.chunk_size_value_label.setFont(QFont("Segoe UI", 10))
-        self.chunk_size_value_label.setStyleSheet("color: #ecf0f1; margin-top: 4px;")  # Add top margin
+        self.chunk_size_value_label.setStyleSheet("color: #ecf0f1; margin-top: 4px;")  
         chunk_size_layout.addWidget(self.chunk_size_value_label)
 
         chunk_size_description = QLabel("(Maximum number of words to be given to Gemini as content input per API call)(Default : 3000 words) Bigger chunk size: Fewer API calls, faster execution, but potentially lower detail (good for summarizing longer videos).")
         chunk_size_description.setFont(QFont("Segoe UI", 8))
         chunk_size_description.setStyleSheet("""
             color: #bdc3c7;
-            margin-top: 18px;  # Add top margin
+            margin-top: 18px;  
             padding: 2px;
         """)
         chunk_size_description.setWordWrap(True)
@@ -443,7 +443,7 @@ Text:"""
         self.move(frame.topLeft())
 
     def validate_inputs(self):
-        url_text = self.url_input.text() # ADD THIS LINE: Get the text from the input field
+        url_text = self.url_input.text() 
 
         if not (url_text.startswith("https://www.youtube.com/playlist") or
             url_text.startswith("https://www.youtube.com/watch?v=")):
@@ -512,7 +512,7 @@ Text:"""
 
         model_combo = QComboBox()
         model_combo.addItems(self.available_models)
-        model_combo.setCurrentText(self.selected_model_name) # Set default selection
+        model_combo.setCurrentText(self.selected_model_name) 
 
         layout = QVBoxLayout()
         layout.addWidget(model_combo)
@@ -587,8 +587,8 @@ Text:"""
 
     def update_gemini_progress(self, progress_percent):
         # Offset the progress bar to start after extraction (assuming extraction takes up to 50%)
-        # You can adjust the offset and scaling as needed
-        gemini_progress = progress_percent # No offset for now, start from 0 after extraction.
+        
+        gemini_progress = progress_percent 
         self.progress_bar.setValue(gemini_progress)
 
 
@@ -661,7 +661,7 @@ class TranscriptExtractionThread(QThread):
 
     def run(self):
         try:
-            url = self.playlist_url # Renamed for clarity, it could be playlist or video URL
+            url = self.playlist_url 
 
             if "playlist?list=" in url: # Check if it's a playlist URL
                 playlist = Playlist(url)
@@ -674,7 +674,7 @@ class TranscriptExtractionThread(QThread):
                 playlist_name = "Single Video"
 
             with open(self.output_file, 'w', encoding='utf-8') as f:
-                f.write(f"Playlist Name: {playlist_name}\n\n") # Write playlist name (or "Single Video")
+                f.write(f"Playlist Name: {playlist_name}\n\n") 
                 for index, video_url in enumerate(video_urls, 1):
                     if not self._is_running:
                         return
