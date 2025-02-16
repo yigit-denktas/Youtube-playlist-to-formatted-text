@@ -23,7 +23,7 @@
 >> Users can now control the chunk size used when processing transcripts with the Gemini API via a slider in the UI. This allows for customization of processing behavior:
 >>- Larger chunk sizes: Reduce the number of API calls, potentially speeding up execution and suitable for summarizing longer videos with less emphasis on fine details.
 >>- Smaller chunk sizes: Increase API calls but may preserve more detail and nuance, potentially beneficial for tasks requiring high fidelity output.<br><br>
->> ❓ What is Chunk Size?<br>
+>> ❓ What is **Chunk Size**?<br>
 >>  A video, is divided into chunks to be given to AI, so if you set chunk size to 3000 words, and the video has 8000 words, the API workflow would be like this :
 >>  > - First 3000 words ➡➡processed by AI➡➡ Refined part 1
 >>  > - Second 3000 words +  Refined part 1 as context ➡➡processed by AI➡➡ Refinde part 2
