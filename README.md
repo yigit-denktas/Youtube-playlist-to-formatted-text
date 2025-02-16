@@ -83,8 +83,11 @@ pip install -r requirements.txt
     python main.py
     ```
 3.  **In the GUI:**
-    *   Enter the YouTube Playlist URL in the "YouTube Playlist URL" field.
-    *   Choose output file locations for the transcript and Gemini refined text using the "Browse" buttons.
+    *   Enter the YouTube Playlist URL or Video link.
+    *   Type the Output Language.
+    *   choose the style of output.
+    *   Specify chunk size.
+    *   Choose output file locations for the transcript and Gemini refined text using the "Choose File" buttons.
     *   Enter your Gemini API key in the "Gemini API Key" field.
     *   Click "Start Processing".
     *   You can select a Gemini model.
