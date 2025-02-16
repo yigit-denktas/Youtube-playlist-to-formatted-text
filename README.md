@@ -1,6 +1,21 @@
 # YouTube Playlist Processor using Gemini API
 <br>
 <br>
+
+✅ Added several Refinement styles to choose from based on your specific needs.
+> The "Refinement Style" dropdown allows you to choose how Gemini will process the YouTube transcript. Here's a description of each style:
+    
+>> **Balanced and Detailed**: This is the default style, providing a comprehensive refinement of the transcript. It focuses on organizing the text into a well-structured, readable format with headings, bullet points, and bold text, while preserving every detail, context, and nuance of the original content. Ideal if you want a thoroughly enhanced transcript without any information loss.
+    
+>> **Summary**:  This style generates a concise and informative summary of the video transcript. It extracts the core message, main arguments, and key information, providing a quick and easily digestible overview of the video's content. Best for when you need to quickly grasp the main points without reading the entire transcript.
+    
+>> **Educational**: This style transforms the transcript into a structured educational text, similar to a textbook chapter. It uses headings, subheadings, and bullet points for clarity and organization, making it ideal for learning.  **Crucially, it also identifies and defines technical terms and jargon within blockquotes, enhancing understanding and acting as a built-in glossary. (Example Image Below)**
+    
+>> **Narrative Rewriting**:  This style creatively rewrites the transcript into an engaging narrative or story format. It transforms the factual or conversational content into a more captivating and readable piece, like a short story or narrative article.  While storytelling is applied, it stays closely aligned with the original video's subjects and information, making the content more accessible and enjoyable.
+    
+>>  **Q&A Generation**:  This style generates a set of questions and answers based on the transcript, formatted for self-assessment or review. Each question is presented as a foldable header (using Markdown), with the answer hidden beneath.  This format is perfect for creating study guides or quizzes to test your understanding of the video content.(Example Image Below)<br><br>
+
+
 ✅ Added Language Support, now the output file is in the language of user's input.(might not be as good as english, test it yourself!)<br>
 ✅ Added single video url support, no need to put it in a playlist.<br>
 ✅ Added configurable Chunk Size for API calls.<br>
@@ -33,8 +48,7 @@ Read more about it in this [Medium Article](https://medium.com/@ebrahimgolriz444
 <br><br><br><br>
 ![Alt text for the image](Images/image.jpg)<br><br>
 
-![Alt text for the image](Images/image2.png)
-
+![Alt text for the image](Images/image2.png)<br><br>
 
 
 
@@ -77,5 +91,11 @@ pip install -r requirements.txt
     *   Wait for the processing to complete. Progress will be shown in the progress bar and status display.
     *   The output files will be saved to the locations you specified.
   
+![Alt text for the image](Images/ED.png)
+_Example of Educational Style with added definition of technical terms_
+<br><br>
+![Alt text for the image](Images/QA.png)
+_Example of Q@A Style, Questions are headers so they can be folded/unfolded_
+<br><br>
 
 > YouTube playlist used for example files : https://www.youtube.com/playlist?list=PLmHVyfmcRKyx1KSoobwukzf1Nf-Y97Rw0
