@@ -34,7 +34,7 @@
 <br>
 This Python application extracts transcripts from YouTube playlists and refines them using the Google Gemini API(which is free). It takes a YouTube playlist URL as input, extracts transcripts for each video, and then uses Gemini to reformat and improve the readability of the combined transcript. The output is saved as a text file.
 <br><br>
-So you can have a neatly formatted book out of a YouTube playlist!
+So you can have a neatly formatted book out of a YouTube playlist!<br>
 I personally use it to convert large YouTube playlists containing dozens of long videos into a very large organized markdown file to give it as input to NotebookLM as one source.<br>
 Works Great with Obsidian too!<br><br>
 
