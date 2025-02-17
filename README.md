@@ -3,7 +3,7 @@
 <br>
 
 ✅ Added several Refinement styles to choose from based on your specific needs.
-> The "Refinement Style" dropdown allows you to choose how Gemini will process the YouTube transcript. Here's a description of each style:
+> The "Refinement Style" dropdown allows you to choose how AI will process the YouTube transcript. Here's a description of each style:
     
 >> ⚖️ **Balanced and Detailed**: This is the default style, providing a comprehensive refinement of the transcript. It focuses on organizing the text into a well-structured, readable format with headings, bullet points, and bold text, while preserving every detail, context, and nuance of the original content. Ideal if you want a thoroughly enhanced transcript without any information loss.
     
