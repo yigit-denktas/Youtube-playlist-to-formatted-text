@@ -98,7 +98,7 @@ pip install -r requirements.txt
 _Example of Educational Style with added definition of technical terms_
 <br><br>
 ![Alt text for the image](Images/QA.png)
-_Example of Q@A Style, Questions are headers so they can be folded/unfolded_
+_Example of Q&A Style, Questions are headers so they can be folded/unfolded_
 <br><br>
 
 > YouTube playlist used for example files : https://www.youtube.com/playlist?list=PLmHVyfmcRKyx1KSoobwukzf1Nf-Y97Rw0
