@@ -1,7 +1,7 @@
 # YouTube Playlist Processor using Gemini API
 <br>
 <br>
-
+![Alt text for the image](Images/image.jpg)<br><br>
 ✅ Added several Refinement styles to choose from based on your specific needs.
 > The "Refinement Style" dropdown allows you to choose how AI will process the YouTube transcript. Here's a description of each style:
     
@@ -47,7 +47,7 @@ Read more about it in this [Medium Article](https://medium.com/@ebrahimgolriz444
 *   Selectable Gemini models.
 *   Output to markdown file.
 <br><br><br><br>
-![Alt text for the image](Images/image.jpg)<br><br>
+
 
 ![Alt text for the image](Images/image2.png)<br><br>
 
