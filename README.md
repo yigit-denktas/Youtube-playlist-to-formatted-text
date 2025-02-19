@@ -29,7 +29,7 @@
 >>  A video, is divided into chunks to be given to AI, so if you set chunk size to 3000 words, and the video has 8000 words, the API workflow would be like this :
 >>  > - First 3000 words ➡➡processed by AI➡➡ Refined part 1
 >>  > - Second 3000 words +  Refined part 1 as context ➡➡processed by AI➡➡ Refinde part 2
->>  > - final 2000 words +  Refined part 2 as context ➡➡processed by AI➡➡ Refinde part 3
+>>  > - final 2000 words +  Refined part 1  + 2 as context ➡➡processed by AI➡➡ Refinde part 3
 >>  > - Refined part 1 + Refined part 2 + Refined part 3 = Final Formatted Text of the video!
 
 <br>
