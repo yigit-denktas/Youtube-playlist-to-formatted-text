@@ -1,4 +1,4 @@
-# YouTube Playlist Processor using Gemini API
+# YouTube Playlist Processor
 <br>
 <br>
 
