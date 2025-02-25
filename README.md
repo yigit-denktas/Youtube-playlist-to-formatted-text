@@ -2,8 +2,10 @@
 <br>
 <br>
 
+![Alt text for the image](Images/image.jpg)<br><br>
+
 ✅ Added several Refinement styles to choose from based on your specific needs.
-> The "Refinement Style" dropdown allows you to choose how Gemini will process the YouTube transcript. Here's a description of each style:
+> The "Refinement Style" dropdown allows you to choose how AI will process the YouTube transcript. Here's a description of each style:
     
 >> ⚖️ **Balanced and Detailed**: This is the default style, providing a comprehensive refinement of the transcript. It focuses on organizing the text into a well-structured, readable format with headings, bullet points, and bold text, while preserving every detail, context, and nuance of the original content. Ideal if you want a thoroughly enhanced transcript without any information loss.
     
@@ -27,15 +29,16 @@
 >>  A video, is divided into chunks to be given to AI, so if you set chunk size to 3000 words, and the video has 8000 words, the API workflow would be like this :
 >>  > - First 3000 words ➡➡processed by AI➡➡ Refined part 1
 >>  > - Second 3000 words +  Refined part 1 as context ➡➡processed by AI➡➡ Refinde part 2
->>  > - final 2000 words +  Refined part 2 as context ➡➡processed by AI➡➡ Refinde part 3
+>>  > - final 2000 words +  Refined part 1  + 2 as context ➡➡processed by AI➡➡ Refinde part 3
 >>  > - Refined part 1 + Refined part 2 + Refined part 3 = Final Formatted Text of the video!
 
 <br>
 <br>
 This Python application extracts transcripts from YouTube playlists and refines them using the Google Gemini API(which is free). It takes a YouTube playlist URL as input, extracts transcripts for each video, and then uses Gemini to reformat and improve the readability of the combined transcript. The output is saved as a text file.
 <br><br>
-So you can have a neatly formatted book out of a YouTube playlist!
-I personally use it to convert large YouTube playlists containing dozens of long videos into a very large organized markdown file to give it as input to NotebookLM as one source.<br><br>
+So you can have a neatly formatted book out of a YouTube playlist!<br>
+I personally use it to convert large YouTube playlists containing dozens of long videos into a very large organized markdown file to give it as input to NotebookLM as one source.<br>
+Works Great with Obsidian too!<br><br>
 
 Read more about it in this [Medium Article](https://medium.com/@ebrahimgolriz444/a-tool-to-turn-entire-youtube-playlists-to-markdown-formatted-and-refined-text-books-in-any-3e8742f5d0d3)
 <br><br>
@@ -46,7 +49,7 @@ Read more about it in this [Medium Article](https://medium.com/@ebrahimgolriz444
 *   Selectable Gemini models.
 *   Output to markdown file.
 <br><br><br><br>
-![Alt text for the image](Images/image.jpg)<br><br>
+
 
 ![Alt text for the image](Images/image2.png)<br><br>
 
@@ -98,7 +101,7 @@ pip install -r requirements.txt
 _Example of Educational Style with added definition of technical terms_
 <br><br>
 ![Alt text for the image](Images/QA.png)
-_Example of Q@A Style, Questions are headers so they can be folded/unfolded_
+_Example of Q&A Style, Questions are headers so they can be folded/unfolded_
 <br><br>
 
 > YouTube playlist used for example files : https://www.youtube.com/playlist?list=PLmHVyfmcRKyx1KSoobwukzf1Nf-Y97Rw0
