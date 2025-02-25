@@ -10,6 +10,10 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import google.generativeai as genai
 import re
 import logging
+import os
+from dotenv import load_dotenv
+load_dotenv(".env")
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -85,6 +89,7 @@ Text:"""
         self.selected_model_name = "gemini-2.0-flash-thinking-exp-01-21" # Default model
 
         self.initUI()
+
         
         
     def get_combobox_style(self):
@@ -202,6 +207,8 @@ Text:"""
         self.language_input.setPlaceholderText("e.g., English, Spanish, French")
         self.language_input.setFont(QFont("Segoe UI", 9))
         self.language_input.setStyleSheet(self.get_input_style())
+
+        self.language_input.setText(os.environ.get("LANGUAGE", ""))
         language_layout.addWidget(language_label)
         language_layout.addWidget(self.language_input)
         input_layout.addLayout(language_layout)
@@ -289,6 +296,9 @@ Text:"""
         self.api_key_input.setFont(QFont("Segoe UI", 9))
         self.api_key_input.setStyleSheet(self.get_input_style())
         self.api_key_input.setEchoMode(QLineEdit.Password)
+
+        self.api_key_input.setText(os.environ.get("API_KEY", ""))
+
         api_key_layout.addWidget(api_key_label)
         api_key_layout.addWidget(self.api_key_input)
         input_layout.addLayout(api_key_layout)
@@ -444,7 +454,7 @@ Text:"""
 
     def validate_inputs(self):
         url_text = self.url_input.text() 
-
+        
         if not (url_text.startswith("https://www.youtube.com/playlist") or
             url_text.startswith("https://www.youtube.com/watch?v=")):
 
