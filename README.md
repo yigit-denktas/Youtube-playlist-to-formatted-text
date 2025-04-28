@@ -4,6 +4,10 @@
 
 ![Alt text for the image](Images/image.jpg)<br><br>
 
+### If you found the project useful, you can support me: <br>
+### [Buy me a coffee](https://ko-fi.com/ebrizzzz) ☕️<br><br>
+
+
 ✅ Added several Refinement styles to choose from based on your specific needs.
 > The "Refinement Style" dropdown allows you to choose how AI will process the YouTube transcript. Here's a description of each style:
     
