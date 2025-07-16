@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFont, QColor
 from datetime import datetime
 from pytube import Playlist
-from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
 import google.generativeai as genai
 import re
 import logging
@@ -85,8 +85,8 @@ Text:"""
         self.extraction_thread = None
         self.gemini_thread = None
         self.is_processing = False
-        self.available_models = ["gemini-1.5-flash", "gemini-1.5-pro","gemini-2.0-flash", "gemini-2.0-flash-thinking-exp-01-21", "gemini-2.5-pro-preview-03-25", "gemini-2.5-flash-preview-04-17", "gemini-2.0-flash-lite"] # Static model list
-        self.selected_model_name = "gemini-2.0-flash-thinking-exp-01-21" # Default model
+        self.available_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-thinking-exp-01-21", "gemini-2.5-flash-lite-preview-06-17","gemini-2.5-pro-preview-03-25", "gemini-2.0-flash-lite","gemini-1.5-flash", "gemini-1.5-pro"] # Static model list
+        self.selected_model_name = "gemini-2.5-flash" # Default model
 
         self.initUI()
 
@@ -671,35 +671,69 @@ class TranscriptExtractionThread(QThread):
 
     def run(self):
         try:
-            url = self.playlist_url 
+            url = self.playlist_url
 
-            if "playlist?list=" in url: # Check if it's a playlist URL
+            if "playlist?list=" in url:
                 playlist = Playlist(url)
                 video_urls = playlist.video_urls
                 total_videos = len(video_urls)
-                playlist_name = playlist.title # Get playlist name
-            elif "watch?v=" in url: # Check if it's a single video URL
-                video_urls = [url] # Treat it as a playlist of one video
+                playlist_name = playlist.title
+            elif "watch?v=" in url:
+                video_urls = [url]
                 total_videos = 1
                 playlist_name = "Single Video"
+            else:
+                # Handle invalid URL case
+                self.error_occurred.emit("Invalid URL provided. Please use a valid YouTube video or playlist URL.")
+                return
+
 
             with open(self.output_file, 'w', encoding='utf-8') as f:
-                f.write(f"Playlist Name: {playlist_name}\n\n") 
+                f.write(f"Playlist Name: {playlist_name}\n\n")
                 for index, video_url in enumerate(video_urls, 1):
                     if not self._is_running:
                         return
 
+                    
                     try:
                         video_id = video_url.split("?v=")[1].split("&")[0]
-                        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
-                        transcript = ' '.join([transcript['text'] for transcript in transcript_list])
+                        fetched_transcript = None  # Initialize for this video
 
-                        f.write(f"Video URL: {video_url}\n")
-                        f.write(transcript + '\n\n')
+                        # 1. Get the list of all available transcripts
+                        transcript_list_obj = YouTubeTranscriptApi.list_transcripts(video_id)
+
+                        # 2. Try to find and fetch English first
+                        try:
+                            transcript_object = transcript_list_obj.find_transcript(['en'])
+                            self.status_update.emit(f"Found English transcript for video {index}/{total_videos}. Fetching...")
+                            fetched_transcript = transcript_object.fetch()
+                        
+                        # 3. If English is not found, fallback to the first available transcript
+                        except NoTranscriptFound:
+                            self.status_update.emit(f"English not found for video {index}/{total_videos}. Trying fallback...")
+                            # Get the first transcript object from the list
+                            first_transcript_object = next(iter(transcript_list_obj))
+                            self.status_update.emit(f"Found fallback: '{first_transcript_object.language}'. Fetching...")
+                            fetched_transcript = first_transcript_object.fetch()
+                        
+                        # 4. If we successfully got a transcript, process and write it
+                        if fetched_transcript:
+                            
+                            transcript = ' '.join([segment.text for segment in fetched_transcript])
+                            
+                            f.write(f"Video URL: {video_url}\n")
+                            f.write(transcript + '\n\n')
+                            self.status_update.emit(f"Extracted transcript for video {index}/{total_videos}")
+                        else:
+                            
+                            self.status_update.emit(f"Could not find any usable transcript for video {index}/{total_videos} ({video_url})")
 
                         progress_percent = int((index / total_videos) * 100)
                         self.progress_update.emit(progress_percent)
-                        self.status_update.emit(f"Extracted transcript for video {index}/{total_videos}")
+
+                    # 5. This 'except' catches if a video has NO transcripts at all
+                    except NoTranscriptFound:
+                        self.status_update.emit(f"Error: No transcripts found for video {index}/{total_videos} ({video_url})")
                     except Exception as video_error:
                         self.status_update.emit(f"Error processing {video_url}: {str(video_error)}")
 
