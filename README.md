@@ -22,7 +22,7 @@
 >> ❓ **Q&A Generation**:  This style generates a set of questions and answers based on the transcript, formatted for self-assessment or review. Each question is presented as a foldable header (using Markdown), with the answer hidden beneath.  This format is perfect for creating study guides or quizzes to test your understanding of the video content.(Example Image Below)<br><br>
 
 
-✅ Added Language Support, now the output file is in the language of user's input.<br>
+✅ Added Language Support, now the output file is in the language of user's input. Also, the video can be in a ny language, as long as a transcript exists, it will work. <br>
 ✅ Added single video url support, no need to put it in a playlist.<br>
 ✅ Added configurable Chunk Size for API calls.<br>
 
