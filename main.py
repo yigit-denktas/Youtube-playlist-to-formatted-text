@@ -14,6 +14,8 @@ import google.generativeai as genai
 import re
 import logging
 import os
+import time
+import random
 from dotenv import load_dotenv
 load_dotenv(".env")
 
@@ -761,43 +763,79 @@ class TranscriptExtractionThread(QThread):
                         video_id = video_url.split("?v=")[1].split("&")[0]
                         fetched_transcript = None  # Initialize for this video
 
-                        # 1. Get the list of all available transcripts using the configured API
-                        transcript_list_obj = ytt_api.list_transcripts(video_id)
-
-                        # 2. Try to find and fetch English first
-                        try:
-                            transcript_object = transcript_list_obj.find_transcript(['en'])
-                            self.status_update.emit(f"Found English transcript for video {index}/{total_videos}. Fetching...")
-                            fetched_transcript = transcript_object.fetch()
+                        # Enhanced transcript extraction with retry logic
+                        max_retries = 3
+                        retry_delay = 2
                         
-                        # 3. If English is not found, fallback to the first available transcript
-                        except NoTranscriptFound:
-                            self.status_update.emit(f"English not found for video {index}/{total_videos}. Trying fallback...")
-                            # Get the first transcript object from the list
-                            first_transcript_object = next(iter(transcript_list_obj))
-                            self.status_update.emit(f"Found fallback: '{first_transcript_object.language}'. Fetching...")
-                            fetched_transcript = first_transcript_object.fetch()
+                        for attempt in range(max_retries):
+                            try:
+                                if attempt > 0:
+                                    self.status_update.emit(f"Retry attempt {attempt + 1}/{max_retries} for video {index}/{total_videos}")
+                                    time.sleep(retry_delay + random.uniform(1, 3))  # Random delay
+                                
+                                # 1. Get the list of all available transcripts using the configured API
+                                transcript_list_obj = ytt_api.list_transcripts(video_id)
+
+                                # 2. Try to find and fetch English first
+                                try:
+                                    transcript_object = transcript_list_obj.find_transcript(['en'])
+                                    self.status_update.emit(f"Found English transcript for video {index}/{total_videos}. Fetching...")
+                                    fetched_transcript = transcript_object.fetch()
+                                    break  # Success, exit retry loop
+                                
+                                # 3. If English is not found, fallback to the first available transcript
+                                except NoTranscriptFound:
+                                    self.status_update.emit(f"English not found for video {index}/{total_videos}. Trying fallback...")
+                                    # Get the first transcript object from the list
+                                    first_transcript_object = next(iter(transcript_list_obj))
+                                    self.status_update.emit(f"Found fallback: '{first_transcript_object.language}'. Fetching...")
+                                    fetched_transcript = first_transcript_object.fetch()
+                                    break  # Success, exit retry loop
+                                    
+                            except Exception as fetch_error:
+                                error_msg = str(fetch_error)
+                                if "blocking requests" in error_msg or "IP" in error_msg:
+                                    if attempt < max_retries - 1:
+                                        self.status_update.emit(f"IP blocked for video {index}/{total_videos}, waiting before retry...")
+                                        time.sleep(retry_delay * (attempt + 2))  # Exponential backoff
+                                        continue
+                                    else:
+                                        self.status_update.emit(f"Failed after {max_retries} attempts for video {index}/{total_videos}: IP blocked")
+                                        break
+                                else:
+                                    # Other error, don't retry
+                                    raise fetch_error
                         
                         # 4. If we successfully got a transcript, process and write it
                         if fetched_transcript:
-                            
                             transcript = ' '.join([segment.text for segment in fetched_transcript])
-                            
                             f.write(f"Video URL: {video_url}\n")
                             f.write(transcript + '\n\n')
-                            self.status_update.emit(f"Extracted transcript for video {index}/{total_videos}")
+                            self.status_update.emit(f"✅ Extracted transcript for video {index}/{total_videos}")
                         else:
-                            
-                            self.status_update.emit(f"Could not find any usable transcript for video {index}/{total_videos} ({video_url})")
+                            self.status_update.emit(f"⚠️ Could not extract transcript for video {index}/{total_videos} ({video_url})")
 
                         progress_percent = int((index / total_videos) * 100)
                         self.progress_update.emit(progress_percent)
+                        
+                        # Add a small delay between videos to avoid rate limiting
+                        if index < total_videos:
+                            time.sleep(random.uniform(1, 2))
 
                     # 5. This 'except' catches if a video has NO transcripts at all
                     except NoTranscriptFound:
-                        self.status_update.emit(f"Error: No transcripts found for video {index}/{total_videos} ({video_url})")
+                        self.status_update.emit(f"❌ No transcripts available for video {index}/{total_videos} ({video_url})")
                     except Exception as video_error:
-                        self.status_update.emit(f"Error processing {video_url}: {str(video_error)}")
+                        error_msg = str(video_error)
+                        if "blocking requests" in error_msg:
+                            self.status_update.emit(f"🚫 IP blocked for video {index}/{total_videos} - Consider waiting longer between batches")
+                        else:
+                            self.status_update.emit(f"❌ Error processing {video_url}: {error_msg}")
+                            
+                        # If we're getting blocked, suggest stopping
+                        if "blocking requests" in error_msg and index > 5:  # After 5 videos
+                            self.status_update.emit("⚠️ Multiple IP blocks detected. Consider stopping and waiting 30+ minutes before continuing.")
+                            self.status_update.emit("💡 Tip: Process videos in smaller batches (10-20 at a time) with longer delays between batches.")
 
             self.extraction_complete.emit(self.output_file)
         except Exception as e:
