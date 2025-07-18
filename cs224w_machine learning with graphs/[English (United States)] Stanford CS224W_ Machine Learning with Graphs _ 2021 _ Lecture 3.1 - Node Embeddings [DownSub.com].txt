@@ -1,0 +1,295 @@
+This is Lecture 3 of our class and we are going to talk today about node embeddings.
+So the way we think of this is the following.
+Um, the inter- what we talked
+on last week was about traditional machine learning in graphs,
+where the idea was that given an input graph,
+we are going to extract some node link or graph level
+features that basically describe the topological structure,
+uh, of the network,
+either around the node,
+around a particular link or the entire graph.
+And then we can take that topological information,
+compare, um, er, uh, um,
+combine it with the attribute-based information to
+then train a classical machine learning model
+like a support vector machine or a logistic regression,
+uh, to be able to make predictions.
+So, um, in this sense, right,
+the way we are thinking of this is that we are given an input graph here.
+We are then, uh,
+creating structure- structured features or structural features,
+uh, of this graph so that then we can apply
+our learning algorithm and make, uh, prediction.
+And generally most of the effort goes here into the feature engineering,
+uh, where, you know, we are as,
+uh, engineers, humans, scientists,
+we are trying to figure out how to best describe,
+uh, this particular, um,
+network so that, uh,
+it would be most useful, uh,
+for, uh, downstream prediction task.
+Um, and, uh, the question then becomes,
+uh, can we do this automatically?
+Can we kind of get away from, uh, feature engineer?
+So the idea behind graph representation learning is that we wanna
+alleviate this need to do manual feature engineering every single time, every time for,
+uh, every different task,
+and we wanna kind of automatically learn the features,
+the structure of the network,
+um, in- that we are interested in.
+And this is what is called, uh,
+representation learning so that no manual, uh,
+feature engineering is, uh, necessary, uh, anymore.
+So the idea will be to do
+efficient task-independent feature learning for machine learning with the graphs.
+Um, the idea is that for example,
+if we are doing this at the level of individual nodes,
+that for every node,
+we wanna learn how to map this node in a d-dimensional
+space ha- and represent it as a vector of d numbers.
+And we will call this vector of d numbers as feature representation,
+or we will call it, um, an embeding.
+And the goal will be that this, uh, mapping, um,
+happens automatically and that this vector
+captures the structure of the underlying network that,
+uh, we are, uh, interested in,
+uh, analyzing or making predictions over.
+So why would you wanna do this?
+Why create these embeddings?
+Right. The task is to map nodes into an- into an embedding space.
+Um, and the idea is that similarity, uh,
+of the embeddings between nodes indicates their similarity in the network.
+Uh, for example, you know,
+if bo- nodes that are close to each other in the network,
+perhaps they should be embedded close together in the embedding space.
+Um, and the goal of this is that kind of en-
+automatically encodes the network, uh, structure information.
+Um, and then, you know,
+it can be used for many kinds of different downstream prediction tasks.
+For example, you can do any kind of node classification, link prediction,
+graph classification, you can do anomaly detection,
+you can do clustering,
+a lot of different things.
+So to give you an example, uh,
+here is- here is a plot from a- a paper that came up with
+this idea back in 2014, fe- 2015.
+The method is called DeepWalk.
+Um, and they take this, uh, small, uh,
+small network that you see here,
+and then they show how the embedding of nodes would look like in two-dimensions.
+And- and here the nodes are,
+uh, colored by different colors.
+Uh, they have different numbers.
+And here in the, um, in this example, uh,
+you can also see how, um, uh,
+how different nodes get mapped into different parts of the embedding space.
+For example, all these light blue nodes end up here,
+the violet nodes, uh,
+from this part of the network end up here,
+you know, the green nodes are here,
+the bottom two nodes here,
+get kind of set, uh,
+uh on a different pa- uh,
+in a different place.
+And basically what you see is that in some sense,
+this visualization of the network and
+the underlying embedding correspond to each other quite well in two-dimensional space.
+And of course, this is a small network.
+It's a small kind of toy- toy network,
+but you can get an idea about, uh,
+how this would look like in,
+uh, uh- in, uh,
+more interesting, uh, larger,
+uh- in larger dimensions.
+So that's basically the,
+uh- that's basically the, uh, idea.
+So what I wanna now do is to tell you about how do we formulate this as a task, uh,
+how do we view it in this, uh,
+encoder, decoder, uh, view or a definition?
+And then what kind of practical methods, um,
+exist there, uh for us to be able, uh, to do this.
+So the way we are going to do this, um,
+is that we are going to represent, uh,
+a graph, as a- as a- with an adjacency matrix.
+Um, and we are going to think of this,
+um, in terms of its adjacency matrix,
+and we are not going to assume any feature, uh, uh,
+represe- features or attributes,
+uh, on the nodes, uh, of the network.
+So we are just going to- to think of this as a- as a- as a set of,
+um, as a- as an adjacency matrix that we wanna- that we wanna analyze.
+Um, we are going to have a graph, as I showed here,
+and the corresponding adjacency matrix A.
+And for simplicity, we are going to think of these as undirected graphs.
+So the goal is to encode nodes so that similarity in the embedding space- uh,
+similarity in the embedding space,
+you can think of it as distance or as a dot product,
+as an inner product of the coordinates of two nodes
+approximates the similarity in the graph space, right?
+So the idea will be that in- or in the original network,
+I wanna to take the nodes,
+I wanna map them into the embedding space.
+I'm going to use the letter Z to denote the coordinates,
+uh, of that- of that embedding,
+uh, of a given node.
+Um, and the idea is that, you know,
+some notion of similarity here
+corresponds to some notion of similarity in the embedding space.
+And the goal is to learn this encoder that encodes
+the original network as a set of, uh, node embeddings.
+So the goal is to- to define the similarity in the original network, um,
+and to map nodes into the coordinates in the embedding space such that, uh,
+similarity of their embeddings corresponds to the similarity in the network.
+Uh, and as a similarity metric in the embedding space, uh,
+people usually, uh, select, um, dot product.
+And dot product is simply the angle,
+uh, between the two vectors, right?
+So when you do the dot product,
+it's the cosine of the- of the angle.
+So if the two points are close together or in the same direction from the origin,
+they have, um, um,
+high, uh, uh, dot product.
+And if they are orthogonal,
+so there is kind of a 90-degree angle, uh,
+then- then they are as- as dissimilar as
+possible because the dot product will be, uh, zero.
+So that's the idea. So now what do we need to
+define is we need to define this notion of, uh,
+ori- similarity in the original network and we need to define then
+an objective function that will connect the similarity with the, uh, embeddings.
+And this is really what we are going to do ,uh, in this lecture.
+So, uh, to summarize a bit, right?
+Encoder maps nodes, uh, to embeddings.
+We need to define a node similarity function,
+a measure of similarity in the original network.
+And then the decoder, right,
+maps from the embeddings to the similarity score.
+Uh, and then we can optimize the parameters such that
+the decoded similarity corresponds as closely as
+possible to the underlying definition of the network similarity.
+Where here we're using a very simple decoder,
+as I said, just the dot-product.
+So, uh, encoder will map notes into low-dimensional vectors.
+So encoder of a given node will simply be the coordinates or the embedding of that node.
+Um, we talked about how we are going to define the similarity
+in the embedding space in terms of the decoder,
+in terms of the dot product.
+Um, and as I said, uh,
+the embeddings will be in some d-dimensional space.
+You can think of d, you know, between,
+let's say 64 up to about 1,000,
+this is usually how- how,
+uh, how many dimensions people, uh, choose,
+but of course, it depends a bit on the size of the network,
+uh, and other factors as well.
+Um, and then as I said,
+the similarity function specifies how the relationship in
+the- in the vector space map to the relationship in the,
+uh, original ,uh, in the original network.
+And this is what I'm trying to ,uh,
+show an example of, uh, here.
+So the simplest encoding approach is that an encoder is just an embedding-lookup.
+So what- what do I mean by this that- is that an encoded- an
+encoding of a given node is simply a vector of numbers.
+And this is just a lookup in some big matrix.
+So what I mean by this is that our goal will be to learn this matrix Z,
+whose dimensionalities is d,
+the embedding dimension times the number of nodes,
+uh, in the network.
+So this means that for every node we will have a column
+that is reserved to store the embedding for that node.
+And this is what we are going to learn,
+this is what we are going to estimate.
+And then in this kind of notation,
+you can think of v simply as an indicator vector that has all zeros,
+except the value of one in the column
+indicating the- the ID of that node v. And- and what this
+will do pictorially is that basically you can think of
+Z as this matrix that has one column per node,
+um, and the column store- a given column stores the embedding of that given node.
+So the size of this matrix will be number of nodes times the embedding dimension.
+And people now who are, for example,
+thinking about large graphs may already have a question.
+You know, won't these to be a lot of parameters to estimate?
+Because the number of parameters in this model is basically the number of entries, uh,
+of this matrix, and this matrix gets very large because
+it dep- the size of the matrix depends on the number of nodes in the network.
+So if you want to do a network or one billion nodes,
+then the dimensionality of this matrix would be one billion times,
+let's say thousandth, uh,
+and embedding dimension and that's- that's,
+uh, that's a lot of parameters.
+So these methods won't necessarily be most scalable, you can scale them,
+let's say up to millions or a million nodes or, uh,
+something like that if you- if you really try,
+but they will be slow because for every node
+we essentially have to estimate the parameters.
+Basically for every node we have to estimate its embedding- embedding vector,
+which is described by the d-numbers d-parameters,
+d-coordinates that we have to estimate.
+So, um, but this means that once we have estimated this embeddings,
+getting them is very easy.
+Is just, uh, lookup in this matrix where everything is stored.
+So this means, as I said,
+each node is assigned a unique embedding vector.
+And the goal of our methods will be to directly optimize or ,uh,
+learn the embedding of each node separately in some sense.
+Um, and this means that, uh,
+there are many methods that will allow us to do this.
+In particular, we are going to look at two methods.
+One is called, uh,
+DeepWalk and the other one is called node2vec.
+So let me- let me summarize.
+In this view we talked about an encoder ,uh, decoder, uh,
+framework where we have what we call a shallow encoder because it's
+just an embedding-lookup the parameters to optimize ,um, are- are,
+uh, very simple, it is just this embedding matrix Z. Um,
+and for every node we want to identify the embedding z_u.
+And v are going to cover in the future lectures is we are
+going to cover deep encoders like graph neural networks that- that,
+uh, are a very different approach to computing, uh, node embeddings.
+In terms of a decoder,
+decoder for us would be something very similar- simple.
+It'd be simple- simply based on the node similarity based on the dot product.
+And our objective function that we are going to try to
+learn is to maximize the dot product
+of node pairs that are similar according to our node similarity function.
+So then the question is,
+how do we define the similarity, right?
+I've been talking about it,
+but I've never really defined it.
+And really this is how these methods are going to differ between each other,
+is how do they define the node similarity notion?
+Um, and you could ask a lot of different ways how- how to do this, right?
+You could chay- say,
+"Should two nodes have similar embedding if they are perhaps linked by an edge?"
+Perhaps they share many neighbors in common,
+perhaps they have something else in common or they are in similar part of
+the network or the structure of the network around them, uh, look similar.
+And the idea that allow- that- that started all this area of
+learning node embeddings was that we are going to def- define a similarity,
+um, of nodes based on random walks.
+And we are going to ,uh,
+optimize node embedding for this random-walk similarity measure.
+So, uh, let me explain what- what I mean by that.
+So, uh, it is important to know that this method
+is what is called unsupervised or self-supervised,
+in a way that when we are learning the node embeddings,
+we are not utilizing any node labels.
+Um, will only be basically trying to
+learn embedding so that they capture some notion of network similarity,
+but they don't need to capture the- the notion of labels of the nodes.
+Uh, and we are also not- not utilizing any node features
+or node attributes in a sense that if nodes are humans,
+perhaps, you know, their interest,
+location, gender, age would be attached to the node.
+So we are not using any data,
+any information attached to every node or attached to every link.
+And the goal here is to directly estimate a set of coordinates of node so
+that some aspect of the network structure is preserved.
+And in- in this sense,
+these embeddings will be task-independent because they are
+not trained on a given prediction task, um,
+or a given specific, you know,
+labelings of the nodes or are given specific subset of links,
+it is trained just given the network itself.

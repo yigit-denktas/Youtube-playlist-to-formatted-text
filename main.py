@@ -8,7 +8,6 @@ from datetime import datetime
 from pytube import Playlist
 from youtube_transcript_api._api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import NoTranscriptFound
-from youtube_transcript_api.proxies import WebshareProxyConfig
 
 import google.generativeai as genai
 import re
@@ -54,7 +53,7 @@ Text: """,
 
 Crucially, identify any technical terms, jargon, or concepts that are mentioned but not explicitly explained within the transcript. For each identified term, provide a concise definition (no more than two sentences) formatted as a blockquote.  Integrate these definitions strategically within the text, ideally near the first mention of the term, to enhance understanding without disrupting the flow.
 
-Ensure the text is highly informative, accurate, and retains all the original details and nuances of the transcript. The goal is to create a valuable educational resource that is easy to study and understand.
+Ensure the text is highly informative, accurate, and retains all the original details and nuances of the transcript. The goal is to create a valuable educational resource that is easy to study and understand. You can create and include diagrams using mermaid.js syntax to illustrate complex concepts or processes, enhancing the educational value of the text.
 
 All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
 
@@ -307,43 +306,43 @@ Text:"""
         api_key_layout.addWidget(self.api_key_input)
         input_layout.addLayout(api_key_layout)
 
-        # Proxy Configuration (Optional)
-        proxy_layout = QVBoxLayout()
-        proxy_label = QLabel("Proxy Configuration (Optional - for transcript access issues):")
-        proxy_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        proxy_label.setStyleSheet("color: #ecf0f1;")
+        # Proxy Configuration (Optional) - COMMENTED OUT - Not available in this version of youtube_transcript_api
+        # proxy_layout = QVBoxLayout()
+        # proxy_label = QLabel("Proxy Configuration (Optional - for transcript access issues):")
+        # proxy_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        # proxy_label.setStyleSheet("color: #ecf0f1;")
         
-        # Proxy Username
-        proxy_username_layout = QHBoxLayout()
-        proxy_username_label = QLabel("Proxy Username:")
-        proxy_username_label.setFont(QFont("Segoe UI", 9))
-        proxy_username_label.setStyleSheet("color: #ecf0f1;")
-        self.proxy_username_input = QLineEdit()
-        self.proxy_username_input.setPlaceholderText("Leave empty if not using proxy")
-        self.proxy_username_input.setFont(QFont("Segoe UI", 9))
-        self.proxy_username_input.setStyleSheet(self.get_input_style())
-        self.proxy_username_input.setText(os.environ.get("PROXY_USERNAME", ""))
-        proxy_username_layout.addWidget(proxy_username_label)
-        proxy_username_layout.addWidget(self.proxy_username_input)
+        # # Proxy Username
+        # proxy_username_layout = QHBoxLayout()
+        # proxy_username_label = QLabel("Proxy Username:")
+        # proxy_username_label.setFont(QFont("Segoe UI", 9))
+        # proxy_username_label.setStyleSheet("color: #ecf0f1;")
+        # self.proxy_username_input = QLineEdit()
+        # self.proxy_username_input.setPlaceholderText("Leave empty if not using proxy")
+        # self.proxy_username_input.setFont(QFont("Segoe UI", 9))
+        # self.proxy_username_input.setStyleSheet(self.get_input_style())
+        # self.proxy_username_input.setText(os.environ.get("PROXY_USERNAME", ""))
+        # proxy_username_layout.addWidget(proxy_username_label)
+        # proxy_username_layout.addWidget(self.proxy_username_input)
         
-        # Proxy Password
-        proxy_password_layout = QHBoxLayout()
-        proxy_password_label = QLabel("Proxy Password:")
-        proxy_password_label.setFont(QFont("Segoe UI", 9))
-        proxy_password_label.setStyleSheet("color: #ecf0f1;")
-        self.proxy_password_input = QLineEdit()
-        self.proxy_password_input.setPlaceholderText("Leave empty if not using proxy")
-        self.proxy_password_input.setFont(QFont("Segoe UI", 9))
-        self.proxy_password_input.setStyleSheet(self.get_input_style())
-        self.proxy_password_input.setEchoMode(QLineEdit.Password)
-        self.proxy_password_input.setText(os.environ.get("PROXY_PASSWORD", ""))
-        proxy_password_layout.addWidget(proxy_password_label)
-        proxy_password_layout.addWidget(self.proxy_password_input)
+        # # Proxy Password
+        # proxy_password_layout = QHBoxLayout()
+        # proxy_password_label = QLabel("Proxy Password:")
+        # proxy_password_label.setFont(QFont("Segoe UI", 9))
+        # proxy_password_label.setStyleSheet("color: #ecf0f1;")
+        # self.proxy_password_input = QLineEdit()
+        # self.proxy_password_input.setPlaceholderText("Leave empty if not using proxy")
+        # self.proxy_password_input.setFont(QFont("Segoe UI", 9))
+        # self.proxy_password_input.setStyleSheet(self.get_input_style())
+        # self.proxy_password_input.setEchoMode(QLineEdit.Password)
+        # self.proxy_password_input.setText(os.environ.get("PROXY_PASSWORD", ""))
+        # proxy_password_layout.addWidget(proxy_password_label)
+        # proxy_password_layout.addWidget(self.proxy_password_input)
         
-        proxy_layout.addWidget(proxy_label)
-        proxy_layout.addLayout(proxy_username_layout)
-        proxy_layout.addLayout(proxy_password_layout)
-        input_layout.addLayout(proxy_layout)
+        # proxy_layout.addWidget(proxy_label)
+        # proxy_layout.addLayout(proxy_username_layout)
+        # proxy_layout.addLayout(proxy_password_layout)
+        # input_layout.addLayout(proxy_layout)
 
         main_layout.addWidget(input_container)
 
@@ -391,6 +390,11 @@ Text:"""
         control_layout = QHBoxLayout()
         control_layout.setSpacing(20)
 
+        # Auto-fill button
+        self.autofill_button = QPushButton("Auto-fill from .env")
+        self.autofill_button.setStyleSheet(self.get_button_style("#9b59b6", "#8e44ad"))
+        self.autofill_button.clicked.connect(self.autofill_from_env)
+
         self.extract_button = QPushButton("Start Processing")
         self.extract_button.setStyleSheet(self.get_button_style("#2ecc71", "#27ae60"))
         self.extract_button.clicked.connect(self.start_extraction_and_refinement)
@@ -401,6 +405,7 @@ Text:"""
         self.cancel_button.setEnabled(False)
 
         control_layout.addStretch(1)
+        control_layout.addWidget(self.autofill_button)
         control_layout.addWidget(self.extract_button)
         control_layout.addWidget(self.cancel_button)
         control_layout.addStretch(1)
@@ -552,9 +557,12 @@ Text:"""
         self.is_processing = processing
         self.extract_button.setEnabled(not processing)
         self.cancel_button.setEnabled(processing)
+        self.autofill_button.setEnabled(not processing)
 
         inputs = [self.url_input, self.transcript_file_input,
                 self.gemini_file_input, self.api_key_input, self.language_input]
+                # Proxy inputs commented out - not available in this version
+                # self.proxy_username_input, self.proxy_password_input]
         for input_field in inputs:
             input_field.setReadOnly(processing)
 
@@ -600,6 +608,11 @@ Text:"""
         else:
             return # User cancelled model selection
 
+        # Ask user about transcript source
+        source_choice = self.select_transcript_source()
+        if source_choice is None:
+            return  # User cancelled
+        
         self.set_processing_state(True)
         self.progress_bar.setValue(0)
         self.status_display.clear()
@@ -607,20 +620,34 @@ Text:"""
         transcript_output = self.transcript_file_input.text() or \
                           f"transcript_{datetime.now().strftime('%Y%m%d_%H%M')}.txt"
 
-        self.extraction_thread = TranscriptExtractionThread(
-            self.url_input.text(),
-            transcript_output,
+        if source_choice == "Download":
+            # Original behavior - download transcripts from YouTube
+            self.extraction_thread = TranscriptExtractionThread(
+                self.url_input.text(),
+                transcript_output
+                # Proxy parameters commented out - not available in this version
+                # proxy_username=self.proxy_username_input.text().strip() or None,
+                # proxy_password=self.proxy_password_input.text().strip() or None
+            )
+
+            self.extraction_thread.progress_update.connect(self.progress_bar.setValue)
+            self.extraction_thread.status_update.connect(self.update_status)
+            self.extraction_thread.extraction_complete.connect(self.start_gemini_processing)
+            self.extraction_thread.error_occurred.connect(self.handle_error)
+
+            self.status_display.append("<font color='#3498db'>Starting transcript extraction from YouTube...</font>")
+            self.extraction_thread.start()
+        
+        elif source_choice == "Local":
+            # New behavior - process local transcript files
+            folder_path = self.select_transcript_folder()
+            if folder_path:
+                self.process_local_transcripts(folder_path, transcript_output)
+            else:
+                self.set_processing_state(False)
+                return
             proxy_username=self.proxy_username_input.text().strip() or None,
             proxy_password=self.proxy_password_input.text().strip() or None
-        )
-
-        self.extraction_thread.progress_update.connect(self.progress_bar.setValue)
-        self.extraction_thread.status_update.connect(self.update_status)
-        self.extraction_thread.extraction_complete.connect(self.start_gemini_processing)
-        self.extraction_thread.error_occurred.connect(self.handle_error)
-
-        self.status_display.append("<font color='#3498db'>Starting transcript extraction...</font>")
-        self.extraction_thread.start()
 
     def start_gemini_processing(self, transcript_file):
         self.progress_bar.setValue(0) # Reset progress bar for Gemini processing
@@ -707,6 +734,231 @@ Text:"""
                 file_path += ".txt"  # Default to .txt if no extension is given
             field.setText(file_path)
 
+    def autofill_from_env(self):
+        """Auto-fill form fields using values from the .env file (except playlist URL)"""
+        try:
+            # Load environment variables fresh from .env file
+            load_dotenv(".env", override=True)
+            
+            # Count how many fields will be filled
+            filled_count = 0
+            
+            # Language
+            language = os.environ.get("LANGUAGE", "")
+            if language:
+                self.language_input.setText(language)
+                filled_count += 1
+            
+            # API Key
+            api_key = os.environ.get("API_KEY", "")
+            if api_key:
+                self.api_key_input.setText(api_key)
+                filled_count += 1
+            
+            # Proxy credentials - COMMENTED OUT - Not available in this version
+            # proxy_username = os.environ.get("PROXY_USERNAME", "")
+            # if proxy_username:
+            #     self.proxy_username_input.setText(proxy_username)
+            #     filled_count += 1
+            
+            # proxy_password = os.environ.get("PROXY_PASSWORD", "")
+            # if proxy_password:
+            #     self.proxy_password_input.setText(proxy_password)
+            #     filled_count += 1
+            
+            # File paths (if they exist in env)
+            transcript_file = os.environ.get("TRANSCRIPT_OUTPUT_FILE", "")
+            if transcript_file:
+                self.transcript_file_input.setText(transcript_file)
+                filled_count += 1
+            
+            gemini_file = os.environ.get("GEMINI_OUTPUT_FILE", "")
+            if gemini_file:
+                self.gemini_file_input.setText(gemini_file)
+                filled_count += 1
+            
+            # Refinement style
+            refinement_style = os.environ.get("REFINEMENT_STYLE", "")
+            if refinement_style and refinement_style in self.prompts:
+                self.category_combo.setCurrentText(refinement_style)
+                self.selected_category = refinement_style
+                filled_count += 1
+            
+            # Chunk size
+            chunk_size = os.environ.get("CHUNK_SIZE", "")
+            if chunk_size:
+                try:
+                    chunk_size_int = int(chunk_size)
+                    if 2000 <= chunk_size_int <= 50000:  # Within slider range
+                        self.chunk_size_slider.setValue(chunk_size_int)
+                        self.update_chunk_size_label(chunk_size_int)
+                        filled_count += 1
+                except ValueError:
+                    pass  # Invalid chunk size, skip
+            
+            # Model selection
+            model_name = os.environ.get("GEMINI_MODEL", "")
+            if model_name and model_name in self.available_models:
+                self.selected_model_name = model_name
+                filled_count += 1
+            
+            # Show success message
+            if filled_count > 0:
+                msg_box = QMessageBox()
+                msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;")
+                msg_box.setIcon(QMessageBox.Information)
+                msg_box.setText(f"Successfully auto-filled {filled_count} field(s) from .env file!")
+                msg_box.setWindowTitle("Auto-fill Complete")
+                msg_box.exec_()
+                
+                # Update status display
+                self.status_display.append(f"<font color='#9b59b6'>✅ Auto-filled {filled_count} fields from .env file</font>")
+            else:
+                msg_box = QMessageBox()
+                msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;")
+                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setText("No values found in .env file to auto-fill.\n\nMake sure your .env file exists and contains the required variables.")
+                msg_box.setWindowTitle("Auto-fill Warning")
+                msg_box.exec_()
+                
+        except Exception as e:
+            # Show error message
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;")
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setText(f"Error reading .env file: {str(e)}")
+            msg_box.setWindowTitle("Auto-fill Error")
+            msg_box.exec_()
+
+    def select_transcript_source(self):
+        """Ask user whether to download transcripts or use local files"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Select Transcript Source")
+        dialog.setStyleSheet("color: #ecf0f1; background-color: #34495e;")
+        dialog.setFixedSize(400, 200)
+        
+        layout = QVBoxLayout()
+        
+        # Title
+        title_label = QLabel("Choose transcript source:")
+        title_label.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title_label)
+        
+        # Description
+        desc_label = QLabel("Select how you want to obtain transcripts for processing:")
+        desc_label.setFont(QFont("Segoe UI", 10))
+        desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        desc_label.setWordWrap(True)
+        layout.addWidget(desc_label)
+        
+        # Buttons
+        button_layout = QHBoxLayout()
+        
+        download_button = QPushButton("📥 Download from YouTube")
+        download_button.setStyleSheet(self.get_button_style("#3498db", "#2980b9"))
+        download_button.setToolTip("Download transcripts from YouTube URLs (requires playlist/video URL)")
+        
+        local_button = QPushButton("📁 Use Local Files")
+        local_button.setStyleSheet(self.get_button_style("#e67e22", "#d35400"))
+        local_button.setToolTip("Process existing transcript files from a folder")
+        
+        cancel_button = QPushButton("❌ Cancel")
+        cancel_button.setStyleSheet(self.get_button_style("#95a5a6", "#7f8c8d"))
+        
+        button_layout.addWidget(download_button)
+        button_layout.addWidget(local_button)
+        button_layout.addWidget(cancel_button)
+        
+        layout.addLayout(button_layout)
+        dialog.setLayout(layout)
+        
+        result = {"choice": ""}
+        
+        def on_download():
+            result["choice"] = "download"
+            dialog.accept()
+        
+        def on_local():
+            result["choice"] = "local"
+            dialog.accept()
+        
+        def on_cancel():
+            result["choice"] = ""
+            dialog.reject()
+        
+        download_button.clicked.connect(on_download)
+        local_button.clicked.connect(on_local)
+        cancel_button.clicked.connect(on_cancel)
+        
+        dialog.exec_()
+        return result["choice"] if result["choice"] else None
+
+    def select_transcript_folder(self):
+        """Let user select a folder containing transcript files"""
+        folder_path = QFileDialog.getExistingDirectory(
+            self, 
+            "Select Folder Containing Transcript Files",
+            "",
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks
+        )
+        return folder_path if folder_path else None
+
+    def process_local_transcripts(self, folder_path, output_file):
+        """Process existing transcript files from a folder"""
+        try:
+            import glob
+            
+            # Find all .txt files in the folder
+            txt_files = glob.glob(os.path.join(folder_path, "*.txt"))
+            
+            if not txt_files:
+                msg_box = QMessageBox()
+                msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;")
+                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setText(f"No .txt files found in the selected folder:\n{folder_path}")
+                msg_box.setWindowTitle("No Files Found")
+                msg_box.exec_()
+                self.set_processing_state(False)
+                return
+            
+            self.status_display.append(f"<font color='#e67e22'>📁 Found {len(txt_files)} transcript files in folder</font>")
+            self.status_display.append(f"<font color='#e67e22'>📂 Folder: {folder_path}</font>")
+            
+            # Create a combined transcript file
+            self.status_display.append("<font color='#3498db'>🔄 Combining transcript files...</font>")
+            
+            with open(output_file, 'w', encoding='utf-8') as combined_file:
+                combined_file.write(f"Local Transcript Files from: {folder_path}\n\n")
+                
+                for i, file_path in enumerate(txt_files, 1):
+                    filename = os.path.basename(file_path)  # Define filename at the start
+                    try:
+                        self.status_display.append(f"<font color='#3498db'>Processing file {i}/{len(txt_files)}: {filename}</font>")
+                        
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content = f.read().strip()
+                        
+                        # Write in the same format as YouTube transcripts
+                        combined_file.write(f"Video URL: Local File - {filename}\n")
+                        combined_file.write(content + '\n\n')
+                        
+                        # Update progress
+                        progress = int((i / len(txt_files)) * 100)
+                        self.progress_bar.setValue(progress)
+                        
+                    except Exception as file_error:
+                        self.status_display.append(f"<font color='#e74c3c'>⚠️ Error reading {filename}: {str(file_error)}</font>")
+                        continue
+            
+            self.status_display.append(f"<font color='#2ecc71'>✅ Successfully combined {len(txt_files)} files into {output_file}</font>")
+            
+            # Start Gemini processing directly
+            self.start_gemini_processing(output_file)
+            
+        except Exception as e:
+            self.handle_error(f"Error processing local transcripts: {str(e)}")
+
 
 class TranscriptExtractionThread(QThread):
     progress_update = pyqtSignal(int)
@@ -714,30 +966,29 @@ class TranscriptExtractionThread(QThread):
     extraction_complete = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
 
-    def __init__(self, playlist_url, output_file, proxy_username=None, proxy_password=None):
+    def __init__(self, playlist_url, output_file):
+        # Proxy parameters commented out - not available in this version
+        # def __init__(self, playlist_url, output_file, proxy_username=None, proxy_password=None):
         super().__init__()
         self.playlist_url = playlist_url
         self.output_file = output_file
-        self.proxy_username = proxy_username
-        self.proxy_password = proxy_password
+        # self.proxy_username = proxy_username
+        # self.proxy_password = proxy_password
         self._is_running = True
 
     def run(self):
         try:
             url = self.playlist_url
 
-            # Initialize YouTube Transcript API with optional proxy
-            if self.proxy_username and self.proxy_password:
-                self.status_update.emit("Using proxy configuration for transcript access...")
-                ytt_api = YouTubeTranscriptApi(
-                    proxy_config=WebshareProxyConfig(
-                        proxy_username=self.proxy_username,
-                        proxy_password=self.proxy_password,
-                    )
-                )
-            else:
-                self.status_update.emit("Using direct connection for transcript access...")
-                ytt_api = YouTubeTranscriptApi()
+            # Initialize YouTube Transcript API
+            # Proxy configuration commented out - not available in this version
+            # if self.proxy_username and self.proxy_password:
+            #     self.status_update.emit("Proxy credentials provided - will attempt to use them for transcript access...")
+            # else:
+            #     self.status_update.emit("Using direct connection for transcript access...")
+            
+            self.status_update.emit("Using direct connection for transcript access...")
+            ytt_api = YouTubeTranscriptApi()
 
             if "playlist?list=" in url:
                 playlist = Playlist(url)
