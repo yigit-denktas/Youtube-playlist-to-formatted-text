@@ -1,19 +1,21 @@
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QLineEdit, QPushButton, QProgressBar, QTextEdit, QFileDialog, QMessageBox,
-                             QComboBox, QSlider) # Import QComboBox
+                             QComboBox, QSlider, QDialog) # Import QComboBox and QDialog
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFont, QColor
 from datetime import datetime
 from pytube import Playlist
-from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound
+from youtube_transcript_api._api import YouTubeTranscriptApi
+from youtube_transcript_api._errors import NoTranscriptFound
+from youtube_transcript_api.proxies import WebshareProxyConfig
+
 import google.generativeai as genai
 import re
 import logging
 import os
 from dotenv import load_dotenv
 load_dotenv(".env")
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -169,7 +171,7 @@ Text:"""
         # Title Section
         title_label = QLabel("YouTube Playlist Transcript & Gemini Refinement Extractor")
         title_label.setFont(QFont("Segoe UI", 18, QFont.Bold))
-        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         title_label.setStyleSheet("""
             color: #2ecc71;
             padding: 10px;
@@ -238,10 +240,10 @@ Text:"""
         chunk_size_label.setStyleSheet("color: #ecf0f1; margin-bottom: 4px;")  
         chunk_size_layout.addWidget(chunk_size_label)
 
-        self.chunk_size_slider = QSlider(Qt.Horizontal)
+        self.chunk_size_slider = QSlider(Qt.Orientation.Horizontal)
         self.chunk_size_slider.setMinimum(2000)
         self.chunk_size_slider.setMaximum(50000)
-        self.chunk_size_slider.setValue(GeminiProcessingThread.chunk_size)
+        self.chunk_size_slider.setValue(GeminiProcessingThread.DEFAULT_CHUNK_SIZE)
         self.chunk_size_slider.valueChanged.connect(self.update_chunk_size_label)
         self.chunk_size_slider.setStyleSheet("""
             QSlider {
@@ -258,7 +260,7 @@ Text:"""
         """)
         chunk_size_layout.addWidget(self.chunk_size_slider)
 
-        self.chunk_size_value_label = QLabel(str(GeminiProcessingThread.chunk_size))
+        self.chunk_size_value_label = QLabel(str(GeminiProcessingThread.DEFAULT_CHUNK_SIZE))
         self.chunk_size_value_label.setFont(QFont("Segoe UI", 10))
         self.chunk_size_value_label.setStyleSheet("color: #ecf0f1; margin-top: 4px;")  
         chunk_size_layout.addWidget(self.chunk_size_value_label)
@@ -302,6 +304,44 @@ Text:"""
         api_key_layout.addWidget(api_key_label)
         api_key_layout.addWidget(self.api_key_input)
         input_layout.addLayout(api_key_layout)
+
+        # Proxy Configuration (Optional)
+        proxy_layout = QVBoxLayout()
+        proxy_label = QLabel("Proxy Configuration (Optional - for transcript access issues):")
+        proxy_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        proxy_label.setStyleSheet("color: #ecf0f1;")
+        
+        # Proxy Username
+        proxy_username_layout = QHBoxLayout()
+        proxy_username_label = QLabel("Proxy Username:")
+        proxy_username_label.setFont(QFont("Segoe UI", 9))
+        proxy_username_label.setStyleSheet("color: #ecf0f1;")
+        self.proxy_username_input = QLineEdit()
+        self.proxy_username_input.setPlaceholderText("Leave empty if not using proxy")
+        self.proxy_username_input.setFont(QFont("Segoe UI", 9))
+        self.proxy_username_input.setStyleSheet(self.get_input_style())
+        self.proxy_username_input.setText(os.environ.get("PROXY_USERNAME", ""))
+        proxy_username_layout.addWidget(proxy_username_label)
+        proxy_username_layout.addWidget(self.proxy_username_input)
+        
+        # Proxy Password
+        proxy_password_layout = QHBoxLayout()
+        proxy_password_label = QLabel("Proxy Password:")
+        proxy_password_label.setFont(QFont("Segoe UI", 9))
+        proxy_password_label.setStyleSheet("color: #ecf0f1;")
+        self.proxy_password_input = QLineEdit()
+        self.proxy_password_input.setPlaceholderText("Leave empty if not using proxy")
+        self.proxy_password_input.setFont(QFont("Segoe UI", 9))
+        self.proxy_password_input.setStyleSheet(self.get_input_style())
+        self.proxy_password_input.setEchoMode(QLineEdit.Password)
+        self.proxy_password_input.setText(os.environ.get("PROXY_PASSWORD", ""))
+        proxy_password_layout.addWidget(proxy_password_label)
+        proxy_password_layout.addWidget(self.proxy_password_input)
+        
+        proxy_layout.addWidget(proxy_label)
+        proxy_layout.addLayout(proxy_username_layout)
+        proxy_layout.addLayout(proxy_password_layout)
+        input_layout.addLayout(proxy_layout)
 
         main_layout.addWidget(input_container)
 
@@ -448,9 +488,11 @@ Text:"""
 
     def center(self):
         frame = self.frameGeometry()
-        center_point = QApplication.primaryScreen().availableGeometry().center()
-        frame.moveCenter(center_point)
-        self.move(frame.topLeft())
+        screen = QApplication.primaryScreen()
+        if screen is not None:
+            center_point = screen.availableGeometry().center()
+            frame.moveCenter(center_point)
+            self.move(frame.topLeft())
 
     def validate_inputs(self):
         url_text = self.url_input.text() 
@@ -515,27 +557,32 @@ Text:"""
             input_field.setReadOnly(processing)
 
     def select_gemini_model(self):
-        msg_box = QMessageBox()
-        msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;") # Style QMessageBox
-        msg_box.setWindowTitle("Select Gemini Model")
-        msg_box.setText("Choose a Gemini model for refinement:")
-
         model_combo = QComboBox()
         model_combo.addItems(self.available_models)
         model_combo.setCurrentText(self.selected_model_name) 
 
-        layout = QVBoxLayout()
-        layout.addWidget(model_combo)
-        widget = QWidget()
-        widget.setLayout(layout)
-        msg_box.layout().addWidget(widget, 1, 0, msg_box.layout().rowCount(), 1) 
-
-        ok_button = msg_box.addButton(QMessageBox.Ok)
-        cancel_button = msg_box.addButton(QMessageBox.Cancel)
-
-        msg_box.exec_()
-
-        if msg_box.clickedButton() == ok_button:
+        # Create a custom dialog instead of trying to modify QMessageBox layout
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Select Gemini Model")
+        dialog.setStyleSheet("color: #ecf0f1; background-color: #34495e;")
+        
+        dialog_layout = QVBoxLayout()
+        dialog_layout.addWidget(QLabel("Choose a Gemini model for refinement:"))
+        dialog_layout.addWidget(model_combo)
+        
+        button_layout = QHBoxLayout()
+        ok_button = QPushButton("OK")
+        cancel_button = QPushButton("Cancel")
+        button_layout.addWidget(ok_button)
+        button_layout.addWidget(cancel_button)
+        dialog_layout.addLayout(button_layout)
+        
+        dialog.setLayout(dialog_layout)
+        
+        ok_button.clicked.connect(dialog.accept)
+        cancel_button.clicked.connect(dialog.reject)
+        
+        if dialog.exec_() == QDialog.Accepted:
             return model_combo.currentText()
         else:
             return None
@@ -560,7 +607,9 @@ Text:"""
 
         self.extraction_thread = TranscriptExtractionThread(
             self.url_input.text(),
-            transcript_output
+            transcript_output,
+            proxy_username=self.proxy_username_input.text().strip() or None,
+            proxy_password=self.proxy_password_input.text().strip() or None
         )
 
         self.extraction_thread.progress_update.connect(self.progress_bar.setValue)
@@ -663,15 +712,30 @@ class TranscriptExtractionThread(QThread):
     extraction_complete = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
 
-    def __init__(self, playlist_url, output_file):
+    def __init__(self, playlist_url, output_file, proxy_username=None, proxy_password=None):
         super().__init__()
         self.playlist_url = playlist_url
         self.output_file = output_file
+        self.proxy_username = proxy_username
+        self.proxy_password = proxy_password
         self._is_running = True
 
     def run(self):
         try:
             url = self.playlist_url
+
+            # Initialize YouTube Transcript API with optional proxy
+            if self.proxy_username and self.proxy_password:
+                self.status_update.emit("Using proxy configuration for transcript access...")
+                ytt_api = YouTubeTranscriptApi(
+                    proxy_config=WebshareProxyConfig(
+                        proxy_username=self.proxy_username,
+                        proxy_password=self.proxy_password,
+                    )
+                )
+            else:
+                self.status_update.emit("Using direct connection for transcript access...")
+                ytt_api = YouTubeTranscriptApi()
 
             if "playlist?list=" in url:
                 playlist = Playlist(url)
@@ -687,20 +751,18 @@ class TranscriptExtractionThread(QThread):
                 self.error_occurred.emit("Invalid URL provided. Please use a valid YouTube video or playlist URL.")
                 return
 
-
             with open(self.output_file, 'w', encoding='utf-8') as f:
                 f.write(f"Playlist Name: {playlist_name}\n\n")
                 for index, video_url in enumerate(video_urls, 1):
                     if not self._is_running:
                         return
 
-                    
                     try:
                         video_id = video_url.split("?v=")[1].split("&")[0]
                         fetched_transcript = None  # Initialize for this video
 
-                        # 1. Get the list of all available transcripts
-                        transcript_list_obj = YouTubeTranscriptApi.list_transcripts(video_id)
+                        # 1. Get the list of all available transcripts using the configured API
+                        transcript_list_obj = ytt_api.list_transcripts(video_id)
 
                         # 2. Try to find and fetch English first
                         try:
@@ -750,7 +812,7 @@ class GeminiProcessingThread(QThread):
     status_update = pyqtSignal(str)
     processing_complete = pyqtSignal(str)
     error_occurred = pyqtSignal(str)
-    chunk_size = 3000
+    DEFAULT_CHUNK_SIZE = 3000
     
 
     def __init__(self, input_file, output_file, api_key, selected_model_name, output_language, chunk_size,prompt): 
@@ -768,7 +830,8 @@ class GeminiProcessingThread(QThread):
 
     def run(self):
         try:
-            genai.configure(api_key=self.api_key)
+            import google.generativeai as genai  # type: ignore
+            genai.configure(api_key=self.api_key)  # type: ignore
             video_chunks = self.split_videos(self.input_file) # input_file is transcript file path
             final_output_path = self.output_file
             response_file_path = self.output_file.replace(".txt", "_temp_response.txt")
@@ -802,8 +865,7 @@ class GeminiProcessingThread(QThread):
                     # Replace [Language] with user specified language
                     formatted_prompt = self.prompt.replace("[Language]", self.output_language)
                     full_prompt = f"{context_prompt}{formatted_prompt}\n\n{chunk}"
-
-                    model = genai.GenerativeModel(self.selected_model_name) # Use selected model
+                    model = genai.GenerativeModel(model_name=self.selected_model_name)  # type: ignore
 
                     self.status_update.emit(f"Generating Gemini response for Video {video_index + 1}/{total_videos}, Chunk {chunk_index + 1}/{len(video_transcript_chunks)}, please wait...")
                     response = model.generate_content(full_prompt)
