@@ -25,55 +25,58 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
         self.prompts = {
 
-            "Balanced and Detailed": """Turn the following unorganized text into a well-structured, readable format while retaining EVERY detail, context, and nuance of the original content.
-            Refine the text to improve clarity, grammar, and coherence WITHOUT cutting, summarizing, or omitting any information.
-            The goal is to make the content easier to read and process by:
+    "Balanced and Detailed": """Turn the following unorganized text into a well-structured, readable format while retaining EVERY detail, context, and nuance of the original content.
+    Refine the text to improve clarity, grammar, and coherence WITHOUT cutting, summarizing, or omitting any information.
+    The goal is to make the content easier to read and process by:
 
-            - Organizing the content into logical sections with appropriate subheadings.
-            - Using bullet points or numbered lists where applicable to present facts, stats, or comparisons.
-            - Highlighting key terms, names, or headings with bold text for emphasis.
-            - Preserving the original tone, humor, and narrative style while ensuring readability.
-            - Adding clear separators or headings for topic shifts to improve navigation.
+    - Organizing the content into logical sections with appropriate subheadings.
+    - Using bullet points or numbered lists where applicable to present facts, stats, or comparisons.
+    - Highlighting key terms, names, or headings with **bold** text for emphasis.
+    - Preserving the original tone, humor, and narrative style while ensuring readability.
+    - Adding clear separators or headings for topic shifts to improve navigation.
 
-            Ensure the text remains informative, capturing the original intent, tone,
-            and details while presenting the information in a format optimized for analysis by both humans and AI.
-            REMEMBER that Details are important, DO NOT overlook Any details, even small ones.
-            All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
-            Text:
-            """,
+    Ensure the text remains informative, capturing the original intent, tone, and details while presenting the information in a format optimized for analysis by both humans and AI.
+    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text in your response.
 
-            "Summary": """Summarize the following transcript into a concise and informative summary. 
-            Identify the core message, main arguments, and key pieces of information presented in the video.
-            The summary should capture the essence of the video's content in a clear and easily understandable way.
-            Aim for a summary that is shorter than the original transcript but still accurately reflects its key points.  
-            Focus on conveying the most important information and conclusions.
-All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
-Text: """,
-            "Educational": """Transform the following transcript into a comprehensive educational text, resembling a textbook chapter. Structure the content with clear headings, subheadings, and bullet points to enhance readability and organization for educational purposes.
+    Text:""",
 
-Crucially, identify any technical terms, jargon, or concepts that are mentioned but not explicitly explained within the transcript. For each identified term, provide a concise definition (no more than two sentences) formatted as a blockquote.  Integrate these definitions strategically within the text, ideally near the first mention of the term, to enhance understanding without disrupting the flow.
+        "Summary": """Summarize the following transcript into a concise and informative summary. 
+    Identify the core message, main arguments, and key pieces of information presented in the video.
+    The summary should capture the essence of the video's content in a clear and easily understandable way.
+    Aim for a summary that is shorter than the original transcript but still accurately reflects its key points.  
+    Focus on conveying the most important information and conclusions.
 
-Ensure the text is highly informative, accurate, and retains all the original details and nuances of the transcript. The goal is to create a valuable educational resource that is easy to study and understand. You can create and include diagrams using mermaid.js syntax to illustrate complex concepts or processes, enhancing the educational value of the text.
+    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text in your response.
 
-All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
+    Text:""",
 
-Text:""",
-            "Narrative Rewriting": """Rewrite the following transcript into an engaging narrative or story format. Transform the factual or conversational content into a more captivating and readable piece, similar to a short story or narrative article.
+        "Educational": """Transform the following transcript into a comprehensive educational text, resembling a textbook chapter. Structure the content with clear headings, subheadings, and bullet points to enhance readability and organization for educational purposes.
 
-While rewriting, maintain a close adherence to the original subjects and information presented in the video. Do not deviate significantly from the core topics or introduce unrelated elements.  The goal is to enhance engagement and readability through storytelling techniques without altering the fundamental content or message of the video.  Use narrative elements like descriptive language, scene-setting (if appropriate), and a compelling flow to make the information more accessible and enjoyable.
+    Crucially, identify any technical terms, jargon, or concepts that are mentioned but not explicitly explained within the transcript. For each identified term, provide a concise definition (no more than two sentences) formatted as a blockquote. Integrate these definitions strategically within the text, ideally near the first mention of the term, to enhance understanding without disrupting the flow.
 
-All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
+    Ensure the text is highly informative, accurate, and retains all the original details and nuances of the transcript. The goal is to create a valuable educational resource that is easy to study and understand. You can create and include diagrams using Mermaid.js syntax to illustrate complex concepts or processes. Whenever you add a diagram, wrap the ```mermaid code block inside `<div align="center">` and `</div>`, start the block with a descriptive `%% Figure 1 - Title` (or nested `%% Figure 1.1 - Title` when context requires), keep diagrams concise (≤ 15 nodes), and follow each diagram with one-to-two explanatory sentences.
 
-Text:""",
-            "Q&A Generation": """Generate a set of questions and answers based on the following transcript for self-assessment or review.  For each question, create a corresponding answer.
+    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text in your response.
 
-Format each question as a level 3 heading using Markdown syntax (### Question Text). Immediately following each question, provide the answer.  This format is designed for foldable sections, allowing users to easily hide and reveal answers for self-testing.
+    Text:""",
 
-Ensure the questions are relevant to the key information and concepts in the transcript and that the answers are accurate and comprehensive based on the video content.
+        "Narrative Rewriting": """Rewrite the following transcript into an engaging narrative or story format. Transform the factual or conversational content into a more captivating and readable piece, similar to a short story or narrative article.
 
-All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text into your response.
+    While rewriting, maintain a close adherence to the original subjects and information presented in the video. Do not deviate significantly from the core topics or introduce unrelated elements. The goal is to enhance engagement and readability through storytelling techniques without altering the fundamental content or message of the video. Use narrative elements like descriptive language, scene-setting (if appropriate), and a compelling flow to make the information more accessible and enjoyable.
 
-Text:"""
+    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text in your response.
+
+    Text:""",
+
+        "Q&A Generation": """Generate a set of questions and answers based on the following transcript for self-assessment or review. For each question, create a corresponding answer.
+
+    Format each question as a level-3 heading using Markdown syntax (### Question Text). Immediately following each question, provide the answer. This format is designed for foldable sections, allowing users to easily hide and reveal answers for self-testing.
+
+    Ensure the questions are relevant to the key information and concepts in the transcript and that the answers are accurate and comprehensive based on the video content.
+
+    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text in your response.
+
+    Text:"""
         }
         self.category_chunk_sizes = {
             "Balanced and Detailed": 3000,
