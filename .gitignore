@@ -234,3 +234,8 @@ dmypy.json
 
 gemini_processing.log
 gemini_processing.log
+
+# Folders
+transcripts/
+outputs/
+cs224w_machine learning with graphs/

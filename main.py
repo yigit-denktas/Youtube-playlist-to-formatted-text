@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QLineEdit, QPushButton, QProgressBar, QTextEdit, QFileDialog, QMessageBox,
-                             QComboBox, QSlider, QDialog) # Import QComboBox and QDialog
+                             QComboBox, QSlider, QDialog, QScrollArea, QSizePolicy) # Import QComboBox, QDialog, and QScrollArea
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFont, QColor
 from datetime import datetime
@@ -163,11 +163,35 @@ Text:"""
         self.setWindowTitle("YouTube Playlist Transcript & Gemini Refinement Extractor")
         self.setMinimumSize(900, 850)
         self.apply_dark_mode()
-        self.showFullScreen()
 
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(15)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(10)
+
+        # Create scrollable area for better content management
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("""
+            QScrollArea {
+                background-color: #2c3e50;
+                border: none;
+            }
+            QScrollBar:vertical {
+                background: #34495e;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical {
+                background: #3498db;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+        """)
+        
+        scroll_content = QWidget()
+        scroll_layout = QVBoxLayout(scroll_content)
+        scroll_layout.setContentsMargins(10, 10, 22, 10)  # Right margin for scrollbar
+        scroll_layout.setSpacing(15)
 
         # Title Section
         title_label = QLabel("YouTube Playlist Transcript & Gemini Refinement Extractor")
@@ -180,26 +204,101 @@ Text:"""
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                 stop:0 #2c3e50, stop:1 #3498db);
         """)
-        main_layout.addWidget(title_label)
+        scroll_layout.addWidget(title_label)
 
         # Input Container
         input_container = QWidget()
-        input_container.setStyleSheet("background-color: #2c3e50; border-radius: 10px; padding: 10px;")
+        input_container.setStyleSheet("background-color: #2c3e50; border-radius: 10px; padding: 15px;")
         input_layout = QVBoxLayout(input_container)
-        input_layout.setSpacing(1)
+        input_layout.setSpacing(15)  # Increased spacing between sections
 
-        # Playlist URL Input
-        url_layout = QVBoxLayout()
+        # Input Source Section with YouTube URL and Local Folder options
+        source_layout = QVBoxLayout()
+        source_label = QLabel("Input Source:")
+        source_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        source_label.setStyleSheet("color: #ecf0f1;")
+        source_layout.addWidget(source_label)
+
+        # YouTube URL Input
+        url_container = QWidget()
+        url_container.setStyleSheet("background-color: #34495e; border-radius: 8px; padding: 12px; margin: 4px;")
+        url_container_layout = QVBoxLayout(url_container)
+        url_container_layout.setContentsMargins(12, 12, 12, 12)
+        url_container_layout.setSpacing(8)
+        
         url_label = QLabel("YouTube URL (Playlist or Video):")
-        url_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        url_label.setFont(QFont("Segoe UI", 9, QFont.Bold))
         url_label.setStyleSheet("color: #ecf0f1;")
         self.url_input = QLineEdit()
         self.url_input.setPlaceholderText("Enter YouTube playlist or video URL (e.g., https://www.youtube.com/playlist?list=... or https://www.youtube.com/watch?v=...)")
         self.url_input.setFont(QFont("Segoe UI", 9))
-        self.url_input.setStyleSheet(self.get_input_style())
-        url_layout.addWidget(url_label)
-        url_layout.addWidget(self.url_input)
-        input_layout.addLayout(url_layout)
+        self.setup_input_field_for_dark_theme(self.url_input)
+        self.url_input.textChanged.connect(self.on_url_input_changed)
+        
+        # Explicitly set placeholder text color for dark theme
+        palette = self.url_input.palette()
+        palette.setColor(palette.PlaceholderText, QColor("#95a5a6"))
+        self.url_input.setPalette(palette)
+        url_container_layout.addWidget(url_label)
+        url_container_layout.addWidget(self.url_input)
+        source_layout.addWidget(url_container)
+
+        # OR Divider
+        or_layout = QHBoxLayout()
+        or_line1 = QLabel()
+        or_line1.setStyleSheet("background-color: #7f8c8d; height: 1px;")
+        or_line1.setFixedHeight(1)
+        or_text = QLabel("OR")
+        or_text.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        or_text.setStyleSheet("color: #95a5a6; padding: 0 10px;")
+        or_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        or_line2 = QLabel()
+        or_line2.setStyleSheet("background-color: #7f8c8d; height: 1px;")
+        or_line2.setFixedHeight(1)
+        or_layout.addWidget(or_line1, 1)
+        or_layout.addWidget(or_text, 0)
+        or_layout.addWidget(or_line2, 1)
+        source_layout.addLayout(or_layout)
+
+        # Local Folder Input
+        folder_container = QWidget()
+        folder_container.setStyleSheet("background-color: #34495e; border-radius: 8px; padding: 12px; margin: 4px;")
+        folder_container_layout = QVBoxLayout(folder_container)
+        folder_container_layout.setContentsMargins(12, 12, 12, 12)
+        folder_container_layout.setSpacing(8)
+        
+        folder_label = QLabel("Local Transcript Folder:")
+        folder_label.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        folder_label.setStyleSheet("color: #ecf0f1;")
+        
+        folder_input_layout = QHBoxLayout()
+        folder_input_layout.setSpacing(8)  # Add spacing between input and button
+        self.folder_input = QLineEdit()
+        self.folder_input.setPlaceholderText("Select a folder containing transcript files (.txt)")
+        self.folder_input.setFont(QFont("Segoe UI", 9))
+        self.setup_input_field_for_dark_theme(self.folder_input)
+        self.folder_input.setReadOnly(True)
+        self.folder_input.textChanged.connect(self.on_folder_input_changed)
+        
+        # Explicitly set placeholder text color for dark theme
+        palette = self.folder_input.palette()
+        palette.setColor(palette.PlaceholderText, QColor("#95a5a6"))
+        self.folder_input.setPalette(palette)
+        
+        self.select_folder_button = QPushButton("Browse Folder")
+        self.select_folder_button.setStyleSheet(self.get_button_style("#e67e22", "#d35400"))
+        self.select_folder_button.clicked.connect(self.select_local_folder)
+        self.select_folder_button.setMinimumHeight(36)
+        self.select_folder_button.setFixedWidth(120)
+        
+        folder_input_layout.addWidget(self.folder_input)
+        folder_input_layout.addWidget(self.select_folder_button)
+        
+        folder_container_layout.addWidget(folder_label)
+        folder_container_layout.addLayout(folder_input_layout)
+        source_layout.addWidget(folder_container)
+
+        input_layout.addLayout(source_layout)
 
         # Language Input
         language_layout = QVBoxLayout()
@@ -209,7 +308,7 @@ Text:"""
         self.language_input = QLineEdit()
         self.language_input.setPlaceholderText("e.g., English, Spanish, French")
         self.language_input.setFont(QFont("Segoe UI", 9))
-        self.language_input.setStyleSheet(self.get_input_style())
+        self.setup_input_field_for_dark_theme(self.language_input)
 
         self.language_input.setText(os.environ.get("LANGUAGE", ""))
         language_layout.addWidget(language_label)
@@ -248,11 +347,11 @@ Text:"""
         self.chunk_size_slider.valueChanged.connect(self.update_chunk_size_label)
         self.chunk_size_slider.setStyleSheet("""
             QSlider {
-                padding: 0px;  # Reduced padding
+                padding: 0px; /* Reduced padding */
             }
             QSlider::groove:horizontal {
                 height: 4px;
-                margin: 2px 0;  # Add vertical margin
+                margin: 2px 0; /* Add vertical margin */
             }
             QSlider::handle:horizontal {
                 width: 12px;
@@ -297,8 +396,10 @@ Text:"""
         self.api_key_input = QLineEdit()
         self.api_key_input.setPlaceholderText("Enter your Gemini API key")
         self.api_key_input.setFont(QFont("Segoe UI", 9))
-        self.api_key_input.setStyleSheet(self.get_input_style())
+        self.setup_input_field_for_dark_theme(self.api_key_input)
         self.api_key_input.setEchoMode(QLineEdit.Password)
+        # Remove fixed height
+        # self.api_key_input.setMinimumHeight(80)
 
         self.api_key_input.setText(os.environ.get("API_KEY", ""))
 
@@ -306,45 +407,7 @@ Text:"""
         api_key_layout.addWidget(self.api_key_input)
         input_layout.addLayout(api_key_layout)
 
-        # Proxy Configuration (Optional) - COMMENTED OUT - Not available in this version of youtube_transcript_api
-        # proxy_layout = QVBoxLayout()
-        # proxy_label = QLabel("Proxy Configuration (Optional - for transcript access issues):")
-        # proxy_label.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        # proxy_label.setStyleSheet("color: #ecf0f1;")
-        
-        # # Proxy Username
-        # proxy_username_layout = QHBoxLayout()
-        # proxy_username_label = QLabel("Proxy Username:")
-        # proxy_username_label.setFont(QFont("Segoe UI", 9))
-        # proxy_username_label.setStyleSheet("color: #ecf0f1;")
-        # self.proxy_username_input = QLineEdit()
-        # self.proxy_username_input.setPlaceholderText("Leave empty if not using proxy")
-        # self.proxy_username_input.setFont(QFont("Segoe UI", 9))
-        # self.proxy_username_input.setStyleSheet(self.get_input_style())
-        # self.proxy_username_input.setText(os.environ.get("PROXY_USERNAME", ""))
-        # proxy_username_layout.addWidget(proxy_username_label)
-        # proxy_username_layout.addWidget(self.proxy_username_input)
-        
-        # # Proxy Password
-        # proxy_password_layout = QHBoxLayout()
-        # proxy_password_label = QLabel("Proxy Password:")
-        # proxy_password_label.setFont(QFont("Segoe UI", 9))
-        # proxy_password_label.setStyleSheet("color: #ecf0f1;")
-        # self.proxy_password_input = QLineEdit()
-        # self.proxy_password_input.setPlaceholderText("Leave empty if not using proxy")
-        # self.proxy_password_input.setFont(QFont("Segoe UI", 9))
-        # self.proxy_password_input.setStyleSheet(self.get_input_style())
-        # self.proxy_password_input.setEchoMode(QLineEdit.Password)
-        # self.proxy_password_input.setText(os.environ.get("PROXY_PASSWORD", ""))
-        # proxy_password_layout.addWidget(proxy_password_label)
-        # proxy_password_layout.addWidget(self.proxy_password_input)
-        
-        # proxy_layout.addWidget(proxy_label)
-        # proxy_layout.addLayout(proxy_username_layout)
-        # proxy_layout.addLayout(proxy_password_layout)
-        # input_layout.addLayout(proxy_layout)
-
-        main_layout.addWidget(input_container)
+        scroll_layout.addWidget(input_container)
 
         # Progress Section
         progress_container = QWidget()
@@ -375,6 +438,8 @@ Text:"""
         # Status Display
         self.status_display = QTextEdit()
         self.status_display.setReadOnly(True)
+        self.status_display.setMinimumHeight(150)
+        self.status_display.setMaximumHeight(200)
         self.status_display.setStyleSheet("""
             background-color: #2c3e50;
             border: 2px solid #3498db;
@@ -384,7 +449,7 @@ Text:"""
             padding: 8px;
         """)
         progress_layout.addWidget(self.status_display)
-        main_layout.addWidget(progress_container)
+        scroll_layout.addWidget(progress_container)
 
         # Control Buttons
         control_layout = QHBoxLayout()
@@ -393,14 +458,17 @@ Text:"""
         # Auto-fill button
         self.autofill_button = QPushButton("Auto-fill from .env")
         self.autofill_button.setStyleSheet(self.get_button_style("#9b59b6", "#8e44ad"))
+        self.autofill_button.setMinimumHeight(40)
         self.autofill_button.clicked.connect(self.autofill_from_env)
 
         self.extract_button = QPushButton("Start Processing")
         self.extract_button.setStyleSheet(self.get_button_style("#2ecc71", "#27ae60"))
+        self.extract_button.setMinimumHeight(40)
         self.extract_button.clicked.connect(self.start_extraction_and_refinement)
 
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.setStyleSheet(self.get_button_style("#e74c3c", "#c0392b"))
+        self.cancel_button.setMinimumHeight(40)
         self.cancel_button.clicked.connect(self.cancel_processing)
         self.cancel_button.setEnabled(False)
 
@@ -409,23 +477,34 @@ Text:"""
         control_layout.addWidget(self.extract_button)
         control_layout.addWidget(self.cancel_button)
         control_layout.addStretch(1)
+        
+        # Set up the scroll area and main layout
+        scroll_area.setWidget(scroll_content)
+        main_layout.addWidget(scroll_area, 1)  # Give it stretch factor
         main_layout.addLayout(control_layout)
-
+        
+        # Set the layout to central widget
         self.central_widget.setLayout(main_layout)
         self.center()
+        # Show maximized instead of fullscreen
+        self.showMaximized()
 
     def create_file_input(self, parent_layout, label_text, button_text, field_name, handler):
         layout = QHBoxLayout()
-        
         
         input_field = QLineEdit()
         input_field.setObjectName(field_name)
         input_field.setReadOnly(True)
         input_field.setPlaceholderText(f"Select {label_text.split(':')[0]} file")
-        input_field.setStyleSheet(self.get_input_style())
+        self.setup_input_field_for_dark_theme(input_field)
+        
+        # Set size policy for proper expansion
+        input_field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         button = QPushButton(button_text)
         button.setStyleSheet(self.get_button_style("#3498db", "#2980b9"))
+        button.setMinimumHeight(36)
+        button.setFixedWidth(120)  # Fixed width for consistency
         button.clicked.connect(handler)
 
         layout.addWidget(input_field)
@@ -433,31 +512,60 @@ Text:"""
 
         font = QFont("Segoe UI", 10, QFont.Bold)
         label = QLabel(label_text)
-        font = QFont("Segoe UI", 10, QFont.Bold)  # Family, size, weight
         label.setFont(font)
-
-
-        
-        label.setStyleSheet("padding: 0px;")
+        label.setStyleSheet("color: #ecf0f1; padding: 0px;")
 
         parent_layout.addWidget(label)
         parent_layout.addLayout(layout)
 
-
         setattr(self, field_name, input_field)
+
+    def setup_input_field_for_dark_theme(self, input_field):
+        """Configure an input field with proper dark theme styling and colors"""
+        input_field.setStyleSheet(self.get_input_style())
+        
+        # Set size policy
+        input_field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        
+        # Set explicit palette for dark theme compatibility
+        palette = input_field.palette()
+        palette.setColor(palette.Text, QColor("#ecf0f1"))  # Main text color
+        palette.setColor(palette.PlaceholderText, QColor("#95a5a6"))  # Placeholder text color
+        palette.setColor(palette.Base, QColor("#34495e"))  # Background color
+        palette.setColor(palette.Highlight, QColor("#3498db"))  # Selection background
+        palette.setColor(palette.HighlightedText, QColor("#ffffff"))  # Selection text
+        input_field.setPalette(palette)
 
     def get_input_style(self):
         return """
             QLineEdit {
-                background: #34495e;
+                background-color: #34495e;
                 border: 2px solid #3498db;
                 border-radius: 5px;
                 color: #ecf0f1;
-                padding: 2px;
+                padding: 10px 12px;  /* Increased padding for better text visibility */
+                font-size: 9pt;
+                min-height: 16px;    /* Reduced from 20px */
+                selection-background-color: #3498db;
+                selection-color: #ffffff;
             }
             QLineEdit:disabled {
-                background: #2c3e50;
+                background-color: #2c3e50;
                 border-color: #7f8c8d;
+                color: #bdc3c7;
+                padding: 10px 12px;
+            }
+            QLineEdit:read-only {
+                background-color: #34495e;
+                border: 2px solid #3498db;
+                color: #ecf0f1;
+                font-weight: normal;
+                padding: 10px 12px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #2ecc71;
+                background-color: #3e5470;
+                padding: 10px 12px;
             }
         """
 
@@ -469,9 +577,11 @@ Text:"""
                 color: white;
                 border: none;
                 border-radius: 5px;
-                padding: 12px 24px;
-                font-size: 15px;
+                padding: 8px 16px;
+                font-size: 12px;
                 font-weight: bold;
+                min-height: 20px;
+                min-width: 80px;
             }}
             QPushButton:hover {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
@@ -502,18 +612,53 @@ Text:"""
             self.move(frame.topLeft())
 
     def validate_inputs(self):
-        url_text = self.url_input.text() 
+        url_text = self.url_input.text().strip()
+        folder_text = self.folder_input.text().strip()
         
-        if not (url_text.startswith("https://www.youtube.com/playlist") or
-            url_text.startswith("https://www.youtube.com/watch?v=")):
-
+        # Check if neither URL nor folder is provided
+        if not url_text and not folder_text:
             msg_box = QMessageBox()
-            msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;") # Style QMessageBox
+            msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;")
             msg_box.setIcon(QMessageBox.Warning)
-            msg_box.setText("Please enter a valid YouTube playlist URL")
+            msg_box.setText("Please enter a YouTube URL or select a local folder containing transcript files")
+            msg_box.setWindowTitle("Input Source Required")
+            msg_box.exec_()
+            return False
+
+        # If URL is provided, validate it
+        if url_text and not (url_text.startswith("https://www.youtube.com/playlist") or
+                           url_text.startswith("https://www.youtube.com/watch?v=")):
+            msg_box = QMessageBox()
+            msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;")
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setText("Please enter a valid YouTube playlist or video URL")
             msg_box.setWindowTitle("Invalid URL")
             msg_box.exec_()
             return False
+
+        # If folder is provided, validate it exists and contains txt files
+        if folder_text:
+            import os
+            import glob
+            if not os.path.exists(folder_text):
+                msg_box = QMessageBox()
+                msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;")
+                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setText("Selected folder does not exist")
+                msg_box.setWindowTitle("Invalid Folder")
+                msg_box.exec_()
+                return False
+            
+            # Check if folder contains any .txt files
+            txt_files = glob.glob(os.path.join(folder_text, "*.txt"))
+            if not txt_files:
+                msg_box = QMessageBox()
+                msg_box.setStyleSheet("color: #ecf0f1; background-color: #34495e;")
+                msg_box.setIcon(QMessageBox.Warning)
+                msg_box.setText("Selected folder does not contain any .txt transcript files")
+                msg_box.setWindowTitle("No Transcript Files Found")
+                msg_box.exec_()
+                return False
 
         if not self.transcript_file_input.text().endswith(".txt"):
             msg_box = QMessageBox()
@@ -561,8 +706,6 @@ Text:"""
 
         inputs = [self.url_input, self.transcript_file_input,
                 self.gemini_file_input, self.api_key_input, self.language_input]
-                # Proxy inputs commented out - not available in this version
-                # self.proxy_username_input, self.proxy_password_input]
         for input_field in inputs:
             input_field.setReadOnly(processing)
 
@@ -607,11 +750,6 @@ Text:"""
             self.selected_model_name = selected_model
         else:
             return # User cancelled model selection
-
-        # Ask user about transcript source
-        source_choice = self.select_transcript_source()
-        if source_choice is None:
-            return  # User cancelled
         
         self.set_processing_state(True)
         self.progress_bar.setValue(0)
@@ -620,14 +758,14 @@ Text:"""
         transcript_output = self.transcript_file_input.text() or \
                           f"transcript_{datetime.now().strftime('%Y%m%d_%H%M')}.txt"
 
-        if source_choice == "Download":
-            # Original behavior - download transcripts from YouTube
+        url_text = self.url_input.text().strip()
+        folder_text = self.folder_input.text().strip()
+
+        if url_text:
+            # Download transcripts from YouTube
             self.extraction_thread = TranscriptExtractionThread(
-                self.url_input.text(),
+                url_text,
                 transcript_output
-                # Proxy parameters commented out - not available in this version
-                # proxy_username=self.proxy_username_input.text().strip() or None,
-                # proxy_password=self.proxy_password_input.text().strip() or None
             )
 
             self.extraction_thread.progress_update.connect(self.progress_bar.setValue)
@@ -638,16 +776,10 @@ Text:"""
             self.status_display.append("<font color='#3498db'>Starting transcript extraction from YouTube...</font>")
             self.extraction_thread.start()
         
-        elif source_choice == "Local":
-            # New behavior - process local transcript files
-            folder_path = self.select_transcript_folder()
-            if folder_path:
-                self.process_local_transcripts(folder_path, transcript_output)
-            else:
-                self.set_processing_state(False)
-                return
-            proxy_username=self.proxy_username_input.text().strip() or None,
-            proxy_password=self.proxy_password_input.text().strip() or None
+        elif folder_text:
+            # Process local transcript files
+            self.status_display.append("<font color='#e67e22'>Processing local transcript files...</font>")
+            self.process_local_transcripts(folder_text, transcript_output)
 
     def start_gemini_processing(self, transcript_file):
         self.progress_bar.setValue(0) # Reset progress bar for Gemini processing
@@ -719,6 +851,29 @@ Text:"""
         self.status_display.append("<font color='#e74c3c'>Processing cancelled by user</font>")
         self.progress_bar.setValue(0)
 
+    def select_local_folder(self):
+        """Let user select a folder containing transcript files"""
+        folder_path = QFileDialog.getExistingDirectory(
+            self, 
+            "Select Folder Containing Transcript Files",
+            "",
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks
+        )
+        if folder_path:
+            self.folder_input.setText(folder_path)
+            # Clear URL input when folder is selected
+            self.url_input.clear()
+
+    def on_url_input_changed(self, text):
+        """Clear folder input when URL is entered"""
+        if text.strip():
+            self.folder_input.clear()
+
+    def on_folder_input_changed(self, text):
+        """Clear URL input when folder is selected"""
+        if text.strip():
+            self.url_input.clear()
+
     def select_transcript_output_file(self):
         self.select_output_file("Select Transcript Output File", self.transcript_file_input)
 
@@ -754,17 +909,6 @@ Text:"""
             if api_key:
                 self.api_key_input.setText(api_key)
                 filled_count += 1
-            
-            # Proxy credentials - COMMENTED OUT - Not available in this version
-            # proxy_username = os.environ.get("PROXY_USERNAME", "")
-            # if proxy_username:
-            #     self.proxy_username_input.setText(proxy_username)
-            #     filled_count += 1
-            
-            # proxy_password = os.environ.get("PROXY_PASSWORD", "")
-            # if proxy_password:
-            #     self.proxy_password_input.setText(proxy_password)
-            #     filled_count += 1
             
             # File paths (if they exist in env)
             transcript_file = os.environ.get("TRANSCRIPT_OUTPUT_FILE", "")
@@ -967,13 +1111,9 @@ class TranscriptExtractionThread(QThread):
     error_occurred = pyqtSignal(str)
 
     def __init__(self, playlist_url, output_file):
-        # Proxy parameters commented out - not available in this version
-        # def __init__(self, playlist_url, output_file, proxy_username=None, proxy_password=None):
         super().__init__()
         self.playlist_url = playlist_url
         self.output_file = output_file
-        # self.proxy_username = proxy_username
-        # self.proxy_password = proxy_password
         self._is_running = True
 
     def run(self):
@@ -981,12 +1121,6 @@ class TranscriptExtractionThread(QThread):
             url = self.playlist_url
 
             # Initialize YouTube Transcript API
-            # Proxy configuration commented out - not available in this version
-            # if self.proxy_username and self.proxy_password:
-            #     self.status_update.emit("Proxy credentials provided - will attempt to use them for transcript access...")
-            # else:
-            #     self.status_update.emit("Using direct connection for transcript access...")
-            
             self.status_update.emit("Using direct connection for transcript access...")
             ytt_api = YouTubeTranscriptApi()
 
@@ -1211,5 +1345,5 @@ class GeminiProcessingThread(QThread):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.showMaximized()
+    window.show()
     sys.exit(app.exec_())
