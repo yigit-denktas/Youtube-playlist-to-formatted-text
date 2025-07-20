@@ -99,7 +99,7 @@ Text:"""
         return """
             QComboBox {
                 background-color: #34495e;
-                border: 2px solid #3498db;
+                border: 2px solid #5ba8e5;
                 border-radius: 5px;
                 color: #ecf0f1;
                 padding: 0px;
@@ -120,7 +120,7 @@ Text:"""
                 width: 20px;
 
                 border-left-width: 1px;
-                border-left-color: darkgray;
+                border-left-color: #9ca9aa;
                 border-left-style: solid; /* just a single line */
                 border-top-right-radius: 3px; /* same radius as the QComboBox */
                 border-bottom-right-radius: 3px;
@@ -136,11 +136,11 @@ Text:"""
             }
 
             QComboBox QAbstractItemView {
-                border: 2px solid #3498db;
+                border: 2px solid #5ba8e5;
                 border-radius: 5px;
                 background-color: #2c3e50;
                 color: #ecf0f1;
-                selection-background-color: #3498db;
+                selection-background-color: #5ba8e5;
                 selection-color: #ecf0f1;
             }
         """
@@ -182,7 +182,7 @@ Text:"""
                 border-radius: 6px;
             }
             QScrollBar::handle:vertical {
-                background: #3498db;
+                background: #5ba8e5;
                 border-radius: 6px;
                 min-height: 20px;
             }
@@ -202,7 +202,7 @@ Text:"""
             padding: 10px;
             border-radius: 8px;
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 #2c3e50, stop:1 #3498db);
+                stop:0 #2c3e50, stop:1 #5ba8e5);
         """)
         scroll_layout.addWidget(title_label)
 
@@ -237,7 +237,7 @@ Text:"""
         
         # Explicitly set placeholder text color for dark theme
         palette = self.url_input.palette()
-        palette.setColor(palette.PlaceholderText, QColor("#95a5a6"))
+        palette.setColor(palette.PlaceholderText, QColor("#a8b8c3"))
         self.url_input.setPalette(palette)
         url_container_layout.addWidget(url_label)
         url_container_layout.addWidget(self.url_input)
@@ -282,7 +282,7 @@ Text:"""
         
         # Explicitly set placeholder text color for dark theme
         palette = self.folder_input.palette()
-        palette.setColor(palette.PlaceholderText, QColor("#95a5a6"))
+        palette.setColor(palette.PlaceholderText, QColor("#a8b8c3"))
         self.folder_input.setPalette(palette)
         
         self.select_folder_button = QPushButton("Browse Folder")
@@ -368,7 +368,7 @@ Text:"""
         chunk_size_description = QLabel("(Maximum number of words to be given to Gemini as content input per API call)(Default : 3000 words) Bigger chunk size: Fewer API calls, faster execution, but potentially lower detail (good for summarizing longer videos).")
         chunk_size_description.setFont(QFont("Segoe UI", 8))
         chunk_size_description.setStyleSheet("""
-            color: #bdc3c7;
+            color: #c8d1d5;
             margin-top: 18px;  
             padding: 2px;
         """)
@@ -502,7 +502,7 @@ Text:"""
         input_field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
         button = QPushButton(button_text)
-        button.setStyleSheet(self.get_button_style("#3498db", "#2980b9"))
+        button.setStyleSheet(self.get_button_style("#5ba8e5", "#4a94d4"))
         button.setMinimumHeight(36)
         button.setFixedWidth(120)  # Fixed width for consistency
         button.clicked.connect(handler)
@@ -530,9 +530,9 @@ Text:"""
         # Set explicit palette for dark theme compatibility
         palette = input_field.palette()
         palette.setColor(palette.Text, QColor("#ecf0f1"))  # Main text color
-        palette.setColor(palette.PlaceholderText, QColor("#95a5a6"))  # Placeholder text color
+        palette.setColor(palette.PlaceholderText, QColor("#a8b8c3"))  # Improved placeholder text color
         palette.setColor(palette.Base, QColor("#34495e"))  # Background color
-        palette.setColor(palette.Highlight, QColor("#3498db"))  # Selection background
+        palette.setColor(palette.Highlight, QColor("#5ba8e5"))  # Improved selection background
         palette.setColor(palette.HighlightedText, QColor("#ffffff"))  # Selection text
         input_field.setPalette(palette)
 
@@ -540,24 +540,24 @@ Text:"""
         return """
             QLineEdit {
                 background-color: #34495e;
-                border: 2px solid #3498db;
+                border: 2px solid #5ba8e5;
                 border-radius: 5px;
                 color: #ecf0f1;
                 padding: 10px 12px;  /* Increased padding for better text visibility */
                 font-size: 9pt;
                 min-height: 16px;    /* Reduced from 20px */
-                selection-background-color: #3498db;
+                selection-background-color: #5ba8e5;
                 selection-color: #ffffff;
             }
             QLineEdit:disabled {
                 background-color: #2c3e50;
                 border-color: #7f8c8d;
-                color: #bdc3c7;
+                color: #9ca9aa;
                 padding: 10px 12px;
             }
             QLineEdit:read-only {
                 background-color: #34495e;
-                border: 2px solid #3498db;
+                border: 2px solid #5ba8e5;
                 color: #ecf0f1;
                 font-weight: normal;
                 padding: 10px 12px;
