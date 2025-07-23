@@ -10,13 +10,7 @@ from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
 
-# Use centralized dependency management
-import sys
-from pathlib import Path
-current_dir = Path(__file__).parent.parent  # Go up to src directory
-sys.path.insert(0, str(current_dir))
-
-from utils.dependencies import safe_import, get_available_export_formats
+from ..utils.dependencies import safe_import, get_available_export_formats
 
 # Import optional dependencies using the centralized system
 markdown, MARKDOWN_AVAILABLE = safe_import("markdown", "markdown")

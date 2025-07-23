@@ -10,13 +10,7 @@ from typing import List, Dict, Any, Optional, Callable, Protocol
 from datetime import datetime
 import time
 
-# Use centralized dependency management
-import sys
-from pathlib import Path
-current_dir = Path(__file__).parent.parent  # Go up to src directory
-sys.path.insert(0, str(current_dir))
-
-from utils.dependencies import safe_import, is_available
+from ..utils.dependencies import safe_import, is_available
 
 # Import optional dependencies using the centralized system
 aiohttp, AIOHTTP_AVAILABLE = safe_import("aiohttp", "aiohttp")

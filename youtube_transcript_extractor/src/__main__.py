@@ -5,18 +5,13 @@ This module serves as the main entry point, delegating to either CLI or GUI mode
 """
 
 import sys
-import os
-from pathlib import Path
 
 def main():
     """Main entry point - delegate to CLI or GUI based on arguments."""
     
     # Import dependency manager for better error handling
     try:
-        current_dir = Path(__file__).parent
-        sys.path.insert(0, str(current_dir))
-        
-        from utils.dependencies import get_dependency_manager, has_gui_support
+        from .utils.dependencies import get_dependency_manager, has_gui_support
         dependency_manager = get_dependency_manager()
     except ImportError:
         dependency_manager = None
@@ -46,10 +41,10 @@ def main():
             print("Please install GUI dependencies or use CLI mode")
             sys.exit(1)
     else:
-        # Default to CLI mode - use the simplified working CLI for now
+        # Default to CLI mode
         try:
-            from .cli_test import cli
-            cli()
+            from .cli import main as cli_main
+            cli_main()
         except ImportError as e:
             print(f"❌ CLI not available: {e}")
             if dependency_manager:

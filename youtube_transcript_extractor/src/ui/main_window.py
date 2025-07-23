@@ -15,15 +15,15 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFont, QColor
 
-from youtube_transcript_extractor.src.core.models import (
+from ..core.models import (
     ProcessingConfig, ProcessingMode, RefinementStyle, GeminiModels,
     ProcessingPrompts, ProcessingProgress, ProcessingResult
 )
-from youtube_transcript_extractor.src.core.transcript_fetcher import TranscriptFetcher
-from youtube_transcript_extractor.src.core.gemini_processor import GeminiProcessor
-from youtube_transcript_extractor.src.utils.config import ConfigManager, DefaultPaths
-from youtube_transcript_extractor.src.utils.validators import InputValidator
-from youtube_transcript_extractor.src.ui.styles import (
+from ..core.transcript_fetcher import TranscriptFetcher
+from ..core.gemini_processor import GeminiProcessor
+from ..utils.config import ConfigManager, DefaultPaths
+from ..utils.validators import InputValidator
+from .styles import (
     StyleSheets, ButtonStyles, PaletteSetup, MessageBoxStyles,
     DarkTheme, Fonts
 )

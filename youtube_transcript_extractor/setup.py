@@ -81,8 +81,8 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "youtube-transcript-extractor=src.cli_test:main",
-            "yte=src.cli_test:main",  # Short alias
+            "youtube-transcript-extractor=src.cli:main",
+            "yte=src.cli:main",  # Short alias
         ],
         "gui_scripts": [
             "youtube-transcript-extractor-gui=src.ui.main_window:main",

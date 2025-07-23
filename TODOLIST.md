@@ -6,42 +6,6 @@ This action plan addresses the audit findings to complete the refactoring from ~
 
 ---
 
-## Phase 2: Core Functionality Improvements (Medium Priority)
-
-### 2.3 Remove Dead Code and Empty Packages
-
-- **Estimated Time:** 2-3 hours
-- **Priority:** MEDIUM
-- **Dependencies:** None
-
-**Implementation Steps:**
-
-- **Identify Dead Code**
-  - Scan for unused imports, functions, classes
-  - Check for empty or placeholder modules
-  - Find TODO comments indicating incomplete features
-- **Clean Up Empty Packages**
-  - Remove `widgets/` package if truly empty
-  - Remove any other empty directories
-  - Update imports that reference removed packages
-- **Remove Unused Code**
-  - Remove old styling code from original implementation
-  - Clean up unused configuration options
-  - Remove placeholder functions with no implementation
-- **Update Documentation**
-  - Remove references to removed features
-  - Update module documentation
-  - Clean up docstrings for removed parameters
-
-**Acceptance Criteria:**
-
-- [ ] No empty packages or modules
-- [ ] No unused imports or functions
-- [ ] Documentation matches actual codebase
-- [ ] Package size reduced by removing unnecessary code
-
----
-
 ## Phase 3: Quality and Testing Infrastructure (High Priority)
 
 ### 3.1 Implement Comprehensive Testing Framework

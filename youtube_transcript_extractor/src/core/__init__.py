@@ -1,17 +1,13 @@
-"""from .models import (
-    ProcessingConfig, ProcessingMode, RefinementStyle, GeminiModels,
-    TranscriptVideo, ProcessingProgress, ProcessingResult
-)
-from .transcript_fetcher import TranscriptFetcher
-from .gemini_processor import GeminiProcessorbe Transcript Extractor - Core package.
+"""
+YouTube Transcript Extractor - Core package.
 """
 
-from youtube_transcript_extractor.src.core.models import (
+from .models import (
     ProcessingConfig, ProcessingMode, RefinementStyle, GeminiModels,
     ProcessingPrompts, TranscriptVideo, ProcessingProgress, ProcessingResult
 )
-from youtube_transcript_extractor.src.core.transcript_fetcher import TranscriptFetcher
-from youtube_transcript_extractor.src.core.gemini_processor import GeminiProcessor
+from .transcript_fetcher import TranscriptFetcher
+from .gemini_processor import GeminiProcessor
 
 __all__ = [
     'ProcessingConfig', 'ProcessingMode', 'RefinementStyle', 'GeminiModels',

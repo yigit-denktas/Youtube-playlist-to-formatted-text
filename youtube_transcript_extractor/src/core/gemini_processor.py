@@ -8,13 +8,7 @@ import time
 import logging
 from typing import List, Optional, Callable, Protocol
 
-# Use centralized dependency management
-import sys
-from pathlib import Path
-current_dir = Path(__file__).parent.parent  # Go up to src directory
-sys.path.insert(0, str(current_dir))
-
-from utils.dependencies import safe_import, require_dependency
+from ..utils.dependencies import safe_import, require_dependency
 
 # Import required dependency using the centralized system
 genai, GENAI_AVAILABLE = safe_import("google.generativeai", "google-generativeai")

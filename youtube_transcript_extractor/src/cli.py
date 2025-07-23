@@ -22,16 +22,11 @@ from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
 from rich.text import Text
 
-# Ensure proper imports using centralized dependency management
-import sys
-from pathlib import Path
-
-# Get the current directory and add it to path
+# Get the current directory for debugging purposes
 current_dir = Path(__file__).parent
-sys.path.insert(0, str(current_dir))
 
 try:
-    from utils.dependencies import (
+    from .utils.dependencies import (
         get_dependency_manager, 
         require_dependency,
         is_available,
@@ -44,12 +39,12 @@ try:
     dependency_manager = get_dependency_manager()
     
     # Required imports - these should be available
-    from utils.config import ConfigManager
-    from utils.secure_config import SecureConfigManager
-    from core.concurrent_processor import ConcurrentPlaylistProcessor, ConcurrentProcessingResult
-    from core.job_manager import JobManager, JobStatus, JobItemStatus
-    from core.exporters import ExportManager
-    from core.models import RefinementStyle, GeminiModels
+    from .utils.config import ConfigManager
+    from .utils.secure_config import SecureConfigManager
+    from .core.concurrent_processor import ConcurrentPlaylistProcessor, ConcurrentProcessingResult
+    from .core.job_manager import JobManager, JobStatus, JobItemStatus
+    from .core.exporters import ExportManager
+    from .core.models import RefinementStyle, GeminiModels
     
 except ImportError as e:
     print(f"Error importing required modules: {e}")
@@ -59,7 +54,7 @@ except ImportError as e:
     
     # Try to provide more helpful error information using dependency manager if available
     try:
-        from utils.dependencies import get_dependency_manager
+        from .utils.dependencies import get_dependency_manager
         manager = get_dependency_manager()  
         missing_deps = [dep for dep in manager._dependencies.values() 
                        if not dep.is_available and dep.level.value == "required"]

@@ -18,11 +18,7 @@ __description__ = "A modular application for extracting and refining YouTube tra
 try:
     from .utils.dependencies import (
         get_dependency_manager, 
-        require_dependency,
-        is_available,
         has_gui_support,
-        has_async_support,
-        has_security_features,
         get_available_export_formats
     )
     
@@ -47,8 +43,7 @@ try:
     __all__ = [
         'ProcessingConfig', 'ProcessingMode', 'RefinementStyle', 'GeminiModels',
         'TranscriptFetcher', 'GeminiProcessor', 'MainWindow', 'ConfigManager', 'InputValidator',
-        'dependency_manager', 'is_available', 'has_gui_support', 'has_async_support', 
-        'has_security_features', 'get_available_export_formats'
+        'dependency_manager', 'has_gui_support'
     ]
 
 except ImportError as e:
