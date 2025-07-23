@@ -16,12 +16,12 @@ yte_path = current_dir / "youtube_transcript_extractor"
 sys.path.insert(0, str(yte_path))
 
 try:
-    from src.utils.config import ConfigManager
-    from src.utils.secure_config import SecureConfigManager
-    from src.core.concurrent_processor import ConcurrentPlaylistProcessor
-    from src.core.job_manager import JobManager, JobStatus
-    from src.core.exporters import ExportManager
-    from src.core.models import RefinementStyle
+    from youtube_transcript_extractor.src.utils.config import ConfigManager
+    from youtube_transcript_extractor.src.utils.secure_config import SecureConfigManager
+    from youtube_transcript_extractor.src.core.concurrent_processor import ConcurrentPlaylistProcessor
+    from youtube_transcript_extractor.src.core.job_manager import JobManager, JobStatus
+    from youtube_transcript_extractor.src.core.exporters import ExportManager
+    from youtube_transcript_extractor.src.core.models import RefinementStyle
 except ImportError as e:
     print(f"❌ Import error: {e}")
     print("Please ensure all dependencies are installed:")

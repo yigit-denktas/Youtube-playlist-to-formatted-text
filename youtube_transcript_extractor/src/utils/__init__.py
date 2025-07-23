@@ -2,9 +2,9 @@
 YouTube Transcript Extractor - Utils package.
 """
 
-from .config import ConfigManager, DefaultPaths
-from .secure_config import SecureConfigManager
-from .validators import InputValidator, ValidationError, FileValidator
+from youtube_transcript_extractor.src.utils.config import ConfigManager, DefaultPaths
+from youtube_transcript_extractor.src.utils.secure_config import SecureConfigManager
+from youtube_transcript_extractor.src.utils.validators import InputValidator, ValidationError, FileValidator
 
 __all__ = [
     'ConfigManager', 'DefaultPaths', 'SecureConfigManager',

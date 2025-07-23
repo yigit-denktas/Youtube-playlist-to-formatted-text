@@ -9,20 +9,11 @@ import random
 import logging
 from typing import List, Optional, Callable, Protocol
 from pytube import Playlist
-from youtube_transcript_api._api import YouTubeTranscriptApi
+from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import NoTranscriptFound
 
-from .models import TranscriptVideo, ProcessingProgress, ProcessingResult, ProcessingMode
-
-
-class ProgressCallback(Protocol):
-    """Protocol for progress callback functions."""
-    def __call__(self, progress: ProcessingProgress) -> None: ...
-
-
-class StatusCallback(Protocol):
-    """Protocol for status callback functions."""
-    def __call__(self, message: str) -> None: ...
+from youtube_transcript_extractor.src.core.models import TranscriptVideo, ProcessingProgress, ProcessingResult, ProcessingMode
+from youtube_transcript_extractor.src.core.protocols import ProgressCallback, StatusCallback
 
 
 class TranscriptFetcher:
@@ -273,7 +264,7 @@ class TranscriptFetcher:
                         time.sleep(retry_delay + random.uniform(1, 3))
                     
                     # Get the list of all available transcripts
-                    transcript_list_obj = ytt_api.list_transcripts(video_id)
+                    transcript_list_obj = ytt_api.list(video_id)
                     
                     # Try to find and fetch English first
                     try:

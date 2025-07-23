@@ -3,7 +3,7 @@ Tests for the models module.
 """
 
 import pytest
-from src.core.models import (
+from youtube_transcript_extractor.src.core.models import (
     ProcessingConfig, ProcessingMode, RefinementStyle, 
     ProcessingPrompts, GeminiModels, TranscriptVideo, ProcessingResult
 )

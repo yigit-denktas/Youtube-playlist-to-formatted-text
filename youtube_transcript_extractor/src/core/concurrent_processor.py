@@ -23,8 +23,9 @@ try:
 except ImportError:
     TENACITY_AVAILABLE = False
 
-from ..core.models import TranscriptVideo
-from ..core.transcript_fetcher import TranscriptFetcher
+from youtube_transcript_extractor.src.core.models import TranscriptVideo
+from youtube_transcript_extractor.src.core.transcript_fetcher import TranscriptFetcher
+from youtube_transcript_extractor.src.core.protocols import SimpleProgressCallback
 
 
 @dataclass
@@ -48,21 +49,14 @@ class ProcessingTask:
 
 
 @dataclass
-class ProcessingResult:
-    """Result of processing a single task."""
+class ConcurrentProcessingResult:
+    """Result of processing a single task in concurrent processing."""
     task: ProcessingTask
     transcript_video: Optional[TranscriptVideo] = None
     success: bool = False
     error_message: Optional[str] = None
     processing_time: float = 0.0
     retry_count: int = 0
-
-
-class ProgressCallback(Protocol):
-    """Protocol for progress callback functions."""
-    def __call__(self, completed: int, total: int, current_task: Optional[str] = None) -> None:
-        """Progress callback signature."""
-        ...
 
 
 class RateLimiter:
@@ -146,17 +140,17 @@ class ConcurrentTranscriptFetcher:
             )(func)
         return func
     
-    async def _fetch_single_transcript_async(self, task: ProcessingTask) -> ProcessingResult:
+    async def _fetch_single_transcript_async(self, task: ProcessingTask) -> ConcurrentProcessingResult:
         """Fetch single transcript asynchronously with rate limiting.
         
         Args:
             task: Processing task to execute
             
         Returns:
-            ProcessingResult with the outcome
+            ConcurrentProcessingResult with the outcome
         """
         if self._cancelled:
-            return ProcessingResult(
+            return ConcurrentProcessingResult(
                 task=task,
                 success=False,
                 error_message="Processing was cancelled"
@@ -183,7 +177,7 @@ class ConcurrentTranscriptFetcher:
             
             if transcript_video and transcript_video.success:
                 self.logger.debug(f"Successfully fetched transcript for {task.video_id}")
-                return ProcessingResult(
+                return ConcurrentProcessingResult(
                     task=task,
                     transcript_video=transcript_video,
                     success=True,
@@ -193,7 +187,7 @@ class ConcurrentTranscriptFetcher:
             else:
                 error_msg = transcript_video.error_message if transcript_video else "Unknown error"
                 self.logger.warning(f"Failed to fetch transcript for {task.video_id}: {error_msg}")
-                return ProcessingResult(
+                return ConcurrentProcessingResult(
                     task=task,
                     transcript_video=transcript_video,
                     success=False,
@@ -207,7 +201,7 @@ class ConcurrentTranscriptFetcher:
             error_msg = f"Exception during processing: {str(e)}"
             self.logger.error(f"Error processing {task.video_id}: {error_msg}")
             
-            return ProcessingResult(
+            return ConcurrentProcessingResult(
                 task=task,
                 success=False,
                 error_message=error_msg,
@@ -251,8 +245,8 @@ class ConcurrentTranscriptFetcher:
     async def fetch_batch(
         self,
         tasks: List[ProcessingTask],
-        progress_callback: Optional[ProgressCallback] = None
-    ) -> List[ProcessingResult]:
+        progress_callback: Optional[SimpleProgressCallback] = None
+    ) -> List[ConcurrentProcessingResult]:
         """Fetch multiple transcripts concurrently.
         
         Args:
@@ -270,13 +264,13 @@ class ConcurrentTranscriptFetcher:
         # Sort tasks by priority (highest first)
         sorted_tasks = sorted(tasks, key=lambda x: x.priority, reverse=True)
         
-        results: List[ProcessingResult] = []
+        results: List[ConcurrentProcessingResult] = []
         completed_count = 0
         
         # Create semaphore to limit concurrent workers
         semaphore = asyncio.Semaphore(self.max_workers)
         
-        async def process_with_semaphore(task: ProcessingTask) -> ProcessingResult:
+        async def process_with_semaphore(task: ProcessingTask) -> ConcurrentProcessingResult:
             """Process task with semaphore control."""
             async with semaphore:
                 return await self._fetch_single_transcript_async(task)
@@ -310,7 +304,7 @@ class ConcurrentTranscriptFetcher:
             except Exception as e:
                 self.logger.error(f"Error in batch processing: {e}")
                 # Create a failed result for this task
-                failed_result = ProcessingResult(
+                failed_result = ConcurrentProcessingResult(
                     task=sorted_tasks[len(results)],  # Approximate task
                     success=False,
                     error_message=str(e)
@@ -322,7 +316,7 @@ class ConcurrentTranscriptFetcher:
         self.logger.info(f"Batch processing completed: {len(results)} results")
         return results
     
-    def get_statistics(self, results: List[ProcessingResult]) -> Dict[str, Any]:
+    def get_statistics(self, results: List[ConcurrentProcessingResult]) -> Dict[str, Any]:
         """Get processing statistics.
         
         Args:
@@ -352,7 +346,7 @@ class ConcurrentTranscriptFetcher:
             "error_summary": self._get_error_summary(failed)
         }
     
-    def _get_error_summary(self, failed_results: List[ProcessingResult]) -> Dict[str, int]:
+    def _get_error_summary(self, failed_results: List[ConcurrentProcessingResult]) -> Dict[str, int]:
         """Get summary of errors.
         
         Args:
@@ -398,8 +392,8 @@ class ConcurrentPlaylistProcessor:
     async def process_playlist(
         self,
         playlist_url: str,
-        progress_callback: Optional[ProgressCallback] = None
-    ) -> List[ProcessingResult]:
+        progress_callback: Optional[SimpleProgressCallback] = None
+    ) -> List[ConcurrentProcessingResult]:
         """Process entire playlist concurrently.
         
         Args:

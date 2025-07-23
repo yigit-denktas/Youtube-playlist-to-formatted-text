@@ -6,8 +6,8 @@ import os
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 
-from .secure_config import SecureConfigManager
-from ..core.models import ProcessingConfig, ProcessingMode, RefinementStyle, GeminiModels
+from youtube_transcript_extractor.src.utils.secure_config import SecureConfigManager
+from youtube_transcript_extractor.src.core.models import ProcessingConfig, ProcessingMode, RefinementStyle, GeminiModels
 
 
 class ConfigManager:

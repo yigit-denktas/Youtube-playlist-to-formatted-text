@@ -5,7 +5,7 @@ Secure configuration management with encrypted storage.
 import json
 import os
 from pathlib import Path
-from typing import Optional, Dict, Any, TYPE_CHECKING
+from typing import Optional, Dict, Any, TYPE_CHECKING, List
 import logging
 
 # Handle optional dependencies gracefully
@@ -13,16 +13,15 @@ try:
     import keyring  # type: ignore
     KEYRING_AVAILABLE = True
 except ImportError:
+    keyring = None
     KEYRING_AVAILABLE = False
 
 try:
     from cryptography.fernet import Fernet  # type: ignore
     CRYPTOGRAPHY_AVAILABLE = True
 except ImportError:
+    Fernet = None
     CRYPTOGRAPHY_AVAILABLE = False
-
-if TYPE_CHECKING and CRYPTOGRAPHY_AVAILABLE:
-    from cryptography.fernet import Fernet
 
 
 class SecureConfigManager:
@@ -54,9 +53,9 @@ class SecureConfigManager:
             return None
             
         try:
-            import keyring
-            from cryptography.fernet import Fernet
-            
+            if keyring is None or Fernet is None:
+                return None
+                
             key = keyring.get_password(self.SERVICE_NAME, "encryption_key")
             if not key:
                 key = Fernet.generate_key().decode()
@@ -76,12 +75,11 @@ class SecureConfigManager:
         Returns:
             True if stored successfully, False otherwise
         """
-        if not KEYRING_AVAILABLE:
+        if not KEYRING_AVAILABLE or keyring is None:
             self.logger.error("Keyring not available. Cannot store API key securely.")
             return False
             
         try:
-            import keyring
             keyring.set_password(self.SERVICE_NAME, key_name, key_value)
             self.logger.info(f"Successfully stored API key: {key_name}")
             self._update_stored_keys_list(key_name, 'add')
@@ -99,12 +97,11 @@ class SecureConfigManager:
         Returns:
             API key value or None if not found/error
         """
-        if not KEYRING_AVAILABLE:
+        if not KEYRING_AVAILABLE or keyring is None:
             self.logger.warning("Keyring not available. Cannot retrieve API key securely.")
             return None
             
         try:
-            import keyring
             key = keyring.get_password(self.SERVICE_NAME, key_name)
             if key:
                 self.logger.debug(f"Successfully retrieved API key: {key_name}")
@@ -122,12 +119,11 @@ class SecureConfigManager:
         Returns:
             True if deleted successfully, False otherwise
         """
-        if not KEYRING_AVAILABLE:
+        if not KEYRING_AVAILABLE or keyring is None:
             self.logger.error("Keyring not available. Cannot delete API key.")
             return False
             
         try:
-            import keyring
             keyring.delete_password(self.SERVICE_NAME, key_name)
             self.logger.info(f"Successfully deleted API key: {key_name}")
             self._update_stored_keys_list(key_name, 'remove')
@@ -146,7 +142,7 @@ class SecureConfigManager:
             True if saved successfully, False otherwise
         """
         try:
-            if not self._cipher or not CRYPTOGRAPHY_AVAILABLE:
+            if not self._cipher or not CRYPTOGRAPHY_AVAILABLE or Fernet is None:
                 # Fallback to plain JSON if encryption not available
                 self.logger.warning("Encryption not available, saving as plain JSON")
                 config_file = self.CONFIG_FILE.with_suffix('.json')
@@ -154,7 +150,6 @@ class SecureConfigManager:
                     json.dump(config, f, indent=2)
                 return True
             
-            from cryptography.fernet import Fernet
             json_str = json.dumps(config, indent=2)
             encrypted = self._cipher.encrypt(json_str.encode())
             
@@ -213,7 +208,7 @@ class SecureConfigManager:
                 self.logger.info("No .env file found, nothing to migrate")
                 return True
             
-            if not KEYRING_AVAILABLE:
+            if not KEYRING_AVAILABLE or keyring is None:
                 self.logger.warning("Keyring not available. Cannot migrate API keys to secure storage.")
                 return False
             
@@ -257,7 +252,7 @@ class SecureConfigManager:
             self.logger.error(f"Failed to migrate from .env: {e}")
             return False
     
-    def list_stored_keys(self) -> list[str]:
+    def list_stored_keys(self) -> List[str]:
         """List all stored API key names.
         
         Returns:

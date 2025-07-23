@@ -8,8 +8,8 @@ import os
 import tempfile
 from typing import Generator
 
-from src.core.models import ProcessingConfig, ProcessingMode, RefinementStyle
-from src.utils.config import ConfigManager
+from youtube_transcript_extractor.src.core.models import ProcessingConfig, ProcessingMode, RefinementStyle
+from youtube_transcript_extractor.src.utils.config import ConfigManager
 
 
 @pytest.fixture

@@ -15,18 +15,44 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFont, QColor
 
-from ..core.models import (
+from youtube_transcript_extractor.src.core.models import (
     ProcessingConfig, ProcessingMode, RefinementStyle, GeminiModels,
     ProcessingPrompts, ProcessingProgress, ProcessingResult
 )
-from ..core.transcript_fetcher import TranscriptFetcher
-from ..core.gemini_processor import GeminiProcessor
-from ..utils.config import ConfigManager, DefaultPaths
-from ..utils.validators import InputValidator
-from .styles import (
+from youtube_transcript_extractor.src.core.transcript_fetcher import TranscriptFetcher
+from youtube_transcript_extractor.src.core.gemini_processor import GeminiProcessor
+from youtube_transcript_extractor.src.utils.config import ConfigManager, DefaultPaths
+from youtube_transcript_extractor.src.utils.validators import InputValidator
+from youtube_transcript_extractor.src.ui.styles import (
     StyleSheets, ButtonStyles, PaletteSetup, MessageBoxStyles,
     DarkTheme, Fonts
 )
+
+
+class UIHelpers:
+    """Helper methods for consistent UI styling."""
+    
+    @staticmethod
+    def create_label_font(bold: bool = False) -> QFont:
+        """Create a consistent label font.
+        
+        Args:
+            bold: Whether the font should be bold
+            
+        Returns:
+            Configured QFont object
+        """
+        weight = QFont.Bold if bold else QFont.Normal
+        return QFont(Fonts.PRIMARY_FONT, Fonts.LABEL_SIZE, weight)
+    
+    @staticmethod
+    def create_title_font() -> QFont:
+        """Create a consistent title font.
+        
+        Returns:
+            Configured QFont object for titles
+        """
+        return QFont(Fonts.PRIMARY_FONT, Fonts.TITLE_SIZE, QFont.Bold)
 
 
 class ProcessingThread(QThread):
@@ -837,7 +863,7 @@ def main():
     
     # Apply a consistent, modern style palette
     try:
-        PaletteSetup.setup_dark_theme(app)
+        PaletteSetup.setup_input_palette(app)
     except AttributeError:
         # Fallback if setup_dark_theme doesn't exist
         pass

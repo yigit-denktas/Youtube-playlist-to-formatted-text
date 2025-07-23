@@ -15,17 +15,8 @@ except ImportError:
     genai = None
     GENAI_AVAILABLE = False
 
-from .models import ProcessingProgress, ProcessingResult, RefinementStyle, ProcessingPrompts
-
-
-class ProgressCallback(Protocol):
-    """Protocol for progress callback functions."""
-    def __call__(self, progress: ProcessingProgress) -> None: ...
-
-
-class StatusCallback(Protocol):
-    """Protocol for status callback functions."""
-    def __call__(self, message: str) -> None: ...
+from youtube_transcript_extractor.src.core.models import ProcessingProgress, ProcessingResult, RefinementStyle, ProcessingPrompts
+from youtube_transcript_extractor.src.core.protocols import ProgressCallback, StatusCallback
 
 
 class GeminiProcessor:
