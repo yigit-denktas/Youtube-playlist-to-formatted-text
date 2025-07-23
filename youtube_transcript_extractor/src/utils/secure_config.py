@@ -5,33 +5,6 @@ Secure configuration management with encrypted storage.
 import json
 import os
 from pathlib import Path
-from typing import Optional, Dict, Any, Union
-import logging
-
-# Handle optional dependencies gracefully
-try:
-    import keyring  # type: ignore
-    KEYRING_AVAILABLE = True
-except ImportError:
-    KEYRING_AVAILABLE = False
-    keyring = None
-
-try:
-    from cryptography.fernet import Fernet  # type: ignore
-    CRYPTOGRAPHY_AVAILABLE = True
-    FernetType = Fernet
-except ImportError:
-    CRYPTOGRAPHY_AVAILABLE = False
-    FernetType = None
-
-
-"""
-Secure configuration management with encrypted storage.
-"""
-
-import json
-import os
-from pathlib import Path
 from typing import Optional, Dict, Any, TYPE_CHECKING
 import logging
 

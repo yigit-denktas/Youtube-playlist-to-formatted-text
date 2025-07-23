@@ -1,6 +1,5 @@
 """
-Main enhanced application that integrates all Phase 2 improvements.
-This replaces the original main.py with a production-ready version.
+Enhanced YouTube Transcript Extractor with all Phase 2 improvements.
 """
 
 import asyncio
