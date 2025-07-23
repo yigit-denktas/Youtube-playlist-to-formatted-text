@@ -12,6 +12,12 @@ from pytube import Playlist
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import NoTranscriptFound
 
+# Add module-level import for test mocking
+try:
+    import youtube_transcript_api
+except ImportError:
+    youtube_transcript_api = None
+
 from .models import TranscriptVideo, ProcessingProgress, ProcessingResult, ProcessingMode
 from .protocols import ProgressCallback, StatusCallback
 
@@ -463,7 +469,7 @@ class TranscriptFetcher:
                 error_message=error_msg
             )
 
-    def _format_transcript_content(self, transcript_data: List[Dict[str, Any]]) -> str:
+    def _format_transcript_content(self, transcript_data: List[Dict[str, Any]], preserve_timestamps: bool = False) -> str:
         """Format transcript data into readable content."""
         if not transcript_data:
             return ""
@@ -472,8 +478,8 @@ class TranscriptFetcher:
         for entry in transcript_data:
             text = entry.get('text', '').strip()
             if text:
-                # Optional: include timestamps
-                if 'start' in entry:
+                # Include timestamps based on preserve_timestamps parameter
+                if preserve_timestamps and 'start' in entry:
                     timestamp = int(entry['start'])
                     minutes = timestamp // 60
                     seconds = timestamp % 60
