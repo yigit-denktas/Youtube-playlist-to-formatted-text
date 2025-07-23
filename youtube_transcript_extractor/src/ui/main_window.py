@@ -108,8 +108,7 @@ class ProcessingThread(QThread):
             self.progress_update.emit(0)  # Reset progress for Gemini processing
             
             self.gemini_processor = GeminiProcessor(
-                self.config.api_key,
-                self.config.gemini_model
+                self.config.api_key
             )
             
             gemini_result = self.gemini_processor.process_transcripts(

@@ -252,8 +252,7 @@ class TestTranscriptFetcherIntegration:
     
     @pytest.mark.slow
     @pytest.mark.network
-    @pytest.mark.asyncio
-    async def test_real_youtube_video(self):
+    def test_real_youtube_video(self):
         """Test fetching from a real YouTube video (requires network)."""
         config = ProcessingConfig(
             mode=ProcessingMode.YOUTUBE_URL,
@@ -270,7 +269,7 @@ class TestTranscriptFetcherIntegration:
         fetcher = TranscriptFetcher(config)
         
         try:
-            result = await fetcher.fetch_single_video(config.source_path)
+            result = fetcher.fetch_single_video(config.source_path)
             # Note: This test might fail if the video doesn't have transcripts
             # It's mainly to test the integration flow
             assert isinstance(result, TranscriptVideo)

@@ -19,7 +19,7 @@ class TestExporterBase:
     
     def test_cannot_instantiate_directly(self):
         """Test that ExporterBase cannot be instantiated directly."""
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match="not implemented"):
             ExporterBase()
 
 

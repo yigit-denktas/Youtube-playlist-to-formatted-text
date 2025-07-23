@@ -236,7 +236,8 @@ class TestGeminiProcessor:
             mock_genai.GenerativeModel.return_value = mock_model
             
             processor._setup_gemini()
-            await processor.process_transcript("Test content")
+            # Use process_transcript_chunks which is properly async
+            await processor.process_transcript_chunks("Test content")
             
             # Verify callback was called
             assert callback.called

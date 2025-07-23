@@ -418,7 +418,7 @@ class TranscriptFetcher:
                 )
             
             # Fetch transcript
-            transcript_data = ytt_api.get_transcript(video_id)
+            transcript_data = YouTubeTranscriptApi.get_transcript(video_id)
             
             # Format transcript content
             content = self._format_transcript_content(transcript_data)
