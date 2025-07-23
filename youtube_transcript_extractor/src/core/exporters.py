@@ -10,28 +10,31 @@ from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
 
-# Handle optional dependencies gracefully
-try:
-    import markdown  # type: ignore
-    MARKDOWN_AVAILABLE = True
-except ImportError:
-    MARKDOWN_AVAILABLE = False
+# Use centralized dependency management
+import sys
+from pathlib import Path
+current_dir = Path(__file__).parent.parent  # Go up to src directory
+sys.path.insert(0, str(current_dir))
 
-try:
-    from reportlab.lib.pagesizes import letter  # type: ignore
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer  # type: ignore
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle  # type: ignore
-    from reportlab.lib.units import inch  # type: ignore
-    REPORTLAB_AVAILABLE = True
-except ImportError:
-    REPORTLAB_AVAILABLE = False
+from utils.dependencies import safe_import, get_available_export_formats
 
-try:
-    from docx import Document  # type: ignore
-    from docx.shared import Inches  # type: ignore
-    DOCX_AVAILABLE = True
-except ImportError:
-    DOCX_AVAILABLE = False
+# Import optional dependencies using the centralized system
+markdown, MARKDOWN_AVAILABLE = safe_import("markdown", "markdown")
+
+# ReportLab imports
+SimpleDocTemplate, REPORTLAB_AVAILABLE = safe_import("reportlab.platypus.SimpleDocTemplate", "reportlab")
+if REPORTLAB_AVAILABLE:
+    letter, _ = safe_import("reportlab.lib.pagesizes.letter", "reportlab")
+    Paragraph, _ = safe_import("reportlab.platypus.Paragraph", "reportlab")
+    Spacer, _ = safe_import("reportlab.platypus.Spacer", "reportlab")
+    getSampleStyleSheet, _ = safe_import("reportlab.lib.styles.getSampleStyleSheet", "reportlab")
+    ParagraphStyle, _ = safe_import("reportlab.lib.styles.ParagraphStyle", "reportlab")
+    inch, _ = safe_import("reportlab.lib.units.inch", "reportlab")
+
+# Python-docx imports
+Document, DOCX_AVAILABLE = safe_import("docx.Document", "python-docx")
+if DOCX_AVAILABLE:
+    Inches, _ = safe_import("docx.shared.Inches", "python-docx")
 
 
 class ExporterBase(ABC):
@@ -276,6 +279,7 @@ class PDFExporter(ExporterBase):
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         from reportlab.lib.units import inch
+        from reportlab.lib.colors import Color
         
         story = []
         styles = getSampleStyleSheet()
@@ -286,7 +290,7 @@ class PDFExporter(ExporterBase):
             parent=styles['Heading1'],
             fontSize=18,
             spaceAfter=30,
-            textColor='darkblue'
+            textColor=Color(0, 0, 0.5)  # dark blue
         )
         
         video_header_style = ParagraphStyle(
@@ -294,7 +298,7 @@ class PDFExporter(ExporterBase):
             parent=styles['Heading2'],
             fontSize=14,
             spaceAfter=12,
-            textColor='darkgreen'
+            textColor=Color(0, 0.5, 0)  # dark green
         )
         
         # Title

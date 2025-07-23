@@ -46,6 +46,7 @@ setup(
     python_requires=">=3.8",
     install_requires=requirements,
     extras_require={
+        # Development dependencies
         "dev": [
             "pytest>=6.0",
             "pytest-cov>=2.0",
@@ -53,10 +54,35 @@ setup(
             "flake8>=3.8",
             "mypy>=0.800",
         ],
+        # Export format dependencies
+        "export": [
+            "reportlab>=3.6.0",
+            "python-docx>=0.8.11",
+        ],
+        # Security features
+        "security": [
+            "keyring>=23.0.0",
+            "cryptography>=40.0.0",
+        ],
+        # Async processing features
+        "async": [
+            "aiohttp>=3.8.0",
+            "tenacity>=8.2.0",
+        ],
+        # All optional features
+        "full": [
+            "reportlab>=3.6.0",
+            "python-docx>=0.8.11",
+            "keyring>=23.0.0",
+            "cryptography>=40.0.0",
+            "aiohttp>=3.8.0",
+            "tenacity>=8.2.0",
+        ],
     },
     entry_points={
         "console_scripts": [
-            "youtube-transcript-extractor=src.__main__:main",
+            "youtube-transcript-extractor=src.cli_test:main",
+            "yte=src.cli_test:main",  # Short alias
         ],
         "gui_scripts": [
             "youtube-transcript-extractor-gui=src.ui.main_window:main",

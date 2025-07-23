@@ -10,22 +10,24 @@ from typing import List, Dict, Any, Optional, Callable, Protocol
 from datetime import datetime
 import time
 
-# Handle optional dependencies
-try:
-    import aiohttp  # type: ignore
-    AIOHTTP_AVAILABLE = True
-except ImportError:
-    AIOHTTP_AVAILABLE = False
+# Use centralized dependency management
+import sys
+from pathlib import Path
+current_dir = Path(__file__).parent.parent  # Go up to src directory
+sys.path.insert(0, str(current_dir))
 
-try:
-    from tenacity import retry, stop_after_attempt, wait_exponential  # type: ignore
-    TENACITY_AVAILABLE = True
-except ImportError:
-    TENACITY_AVAILABLE = False
+from utils.dependencies import safe_import, is_available
 
-from youtube_transcript_extractor.src.core.models import TranscriptVideo
-from youtube_transcript_extractor.src.core.transcript_fetcher import TranscriptFetcher
-from youtube_transcript_extractor.src.core.protocols import SimpleProgressCallback
+# Import optional dependencies using the centralized system
+aiohttp, AIOHTTP_AVAILABLE = safe_import("aiohttp", "aiohttp")
+retry, TENACITY_AVAILABLE = safe_import("tenacity.retry", "tenacity")
+if TENACITY_AVAILABLE:
+    stop_after_attempt, _ = safe_import("tenacity.stop_after_attempt", "tenacity")
+    wait_exponential, _ = safe_import("tenacity.wait_exponential", "tenacity")
+
+from .models import TranscriptVideo
+from .transcript_fetcher import TranscriptFetcher
+from .protocols import SimpleProgressCallback
 
 
 @dataclass

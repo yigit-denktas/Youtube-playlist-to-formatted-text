@@ -6,7 +6,7 @@ and ensure consistent interfaces across the application.
 """
 
 from typing import Protocol, Optional
-from youtube_transcript_extractor.src.core.models import ProcessingProgress
+from .models import ProcessingProgress
 
 
 class ProgressCallback(Protocol):

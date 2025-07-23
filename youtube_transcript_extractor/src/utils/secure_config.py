@@ -8,20 +8,12 @@ from pathlib import Path
 from typing import Optional, Dict, Any, TYPE_CHECKING, List
 import logging
 
-# Handle optional dependencies gracefully
-try:
-    import keyring  # type: ignore
-    KEYRING_AVAILABLE = True
-except ImportError:
-    keyring = None
-    KEYRING_AVAILABLE = False
+# Use centralized dependency management
+from .dependencies import safe_import, is_available
 
-try:
-    from cryptography.fernet import Fernet  # type: ignore
-    CRYPTOGRAPHY_AVAILABLE = True
-except ImportError:
-    Fernet = None
-    CRYPTOGRAPHY_AVAILABLE = False
+# Import optional dependencies using the centralized system
+keyring, KEYRING_AVAILABLE = safe_import("keyring", "keyring")
+Fernet, CRYPTOGRAPHY_AVAILABLE = safe_import("cryptography.fernet", "cryptography")
 
 
 class SecureConfigManager:

@@ -12,8 +12,8 @@ from pytube import Playlist
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import NoTranscriptFound
 
-from youtube_transcript_extractor.src.core.models import TranscriptVideo, ProcessingProgress, ProcessingResult, ProcessingMode
-from youtube_transcript_extractor.src.core.protocols import ProgressCallback, StatusCallback
+from .models import TranscriptVideo, ProcessingProgress, ProcessingResult, ProcessingMode
+from .protocols import ProgressCallback, StatusCallback
 
 
 class TranscriptFetcher:

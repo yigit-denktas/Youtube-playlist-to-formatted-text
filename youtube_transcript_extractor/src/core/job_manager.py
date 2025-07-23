@@ -437,6 +437,44 @@ class JobManager:
             self.logger.error(f"Failed to delete job {job_id}: {e}")
             return False
     
+    def get_jobs_by_status(self, status: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get jobs filtered by status.
+        
+        Args:
+            status: Filter jobs by status (None for all jobs)
+            
+        Returns:
+            List of job dictionaries
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                
+                if status:
+                    cursor = conn.execute("""
+                        SELECT * FROM jobs 
+                        WHERE status = ?
+                        ORDER BY updated_at DESC
+                    """, (status,))
+                else:
+                    cursor = conn.execute("""
+                        SELECT * FROM jobs 
+                        ORDER BY updated_at DESC
+                    """)
+                
+                jobs = []
+                for row in cursor.fetchall():
+                    job_dict = dict(row)
+                    if job_dict['metadata']:
+                        job_dict['metadata'] = json.loads(job_dict['metadata'])
+                    jobs.append(job_dict)
+                
+                return jobs
+                
+        except Exception as e:
+            self.logger.error(f"Failed to get jobs by status: {e}")
+            return []
+    
     def get_job_statistics(self) -> Dict[str, Any]:
         """Get overall job statistics.
         

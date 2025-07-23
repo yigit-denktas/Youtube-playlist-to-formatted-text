@@ -6,8 +6,23 @@ import os
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 
-from youtube_transcript_extractor.src.utils.secure_config import SecureConfigManager
-from youtube_transcript_extractor.src.core.models import ProcessingConfig, ProcessingMode, RefinementStyle, GeminiModels
+from .secure_config import SecureConfigManager
+
+# Use centralized dependency management for core models
+from .dependencies import safe_import
+
+# Import core models safely
+ProcessingConfig, models_available = safe_import("core.models.ProcessingConfig")
+ProcessingMode, _ = safe_import("core.models.ProcessingMode")
+RefinementStyle, _ = safe_import("core.models.RefinementStyle")
+GeminiModels, _ = safe_import("core.models.GeminiModels")
+
+# Provide fallbacks if models can't be imported
+if not models_available:
+    ProcessingConfig = None
+    ProcessingMode = None
+    RefinementStyle = None
+    GeminiModels = None
 
 
 class ConfigManager:
@@ -82,8 +97,11 @@ class ConfigManager:
         """Get Gemini output file from environment."""
         return self.get_env_value("GEMINI_OUTPUT_FILE", "") or ""
     
-    def get_refinement_style(self) -> RefinementStyle:
+    def get_refinement_style(self):
         """Get refinement style from environment or default."""
+        if not RefinementStyle:
+            return "Balanced and Detailed"  # Fallback string
+            
         style_name = self.get_env_value("REFINEMENT_STYLE", "Balanced and Detailed")
         
         # Try to match the environment value to a RefinementStyle
@@ -91,7 +109,7 @@ class ConfigManager:
             if style.value == style_name:
                 return style
         
-        return RefinementStyle.BALANCED_DETAILED
+        return getattr(RefinementStyle, 'BALANCED_DETAILED', "Balanced and Detailed")
     
     def get_chunk_size(self) -> int:
         """Get chunk size from environment or default."""
@@ -112,10 +130,13 @@ class ConfigManager:
         model_name = self.get_env_value("GEMINI_MODEL", "")
         
         # Validate model exists in available models
-        if model_name in GeminiModels.get_models():
-            return model_name
+        if GeminiModels and hasattr(GeminiModels, 'get_models'):
+            if model_name and model_name in GeminiModels.get_models():
+                return model_name
+            return GeminiModels.get_default_model()
         
-        return GeminiModels.get_default_model()
+        # Fallback if GeminiModels not available
+        return model_name or "gemini-1.5-flash"
     
     def get_auto_fill_data(self) -> Dict[str, Any]:
         """Get all configuration data for auto-fill functionality.
@@ -149,7 +170,8 @@ class ConfigManager:
                     count += 1
             elif key == "refinement_style":
                 # Check if it's not the default
-                if value != RefinementStyle.BALANCED_DETAILED:
+                default_check = getattr(RefinementStyle, 'BALANCED_DETAILED', "Balanced and Detailed") if RefinementStyle else "Balanced and Detailed"
+                if value != default_check:
                     count += 1
             elif key == "chunk_size":
                 # Check if it's not the default

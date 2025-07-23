@@ -8,15 +8,19 @@ import time
 import logging
 from typing import List, Optional, Callable, Protocol
 
-try:
-    import google.generativeai as genai  # type: ignore
-    GENAI_AVAILABLE = True
-except ImportError:
-    genai = None
-    GENAI_AVAILABLE = False
+# Use centralized dependency management
+import sys
+from pathlib import Path
+current_dir = Path(__file__).parent.parent  # Go up to src directory
+sys.path.insert(0, str(current_dir))
 
-from youtube_transcript_extractor.src.core.models import ProcessingProgress, ProcessingResult, RefinementStyle, ProcessingPrompts
-from youtube_transcript_extractor.src.core.protocols import ProgressCallback, StatusCallback
+from utils.dependencies import safe_import, require_dependency
+
+# Import required dependency using the centralized system
+genai, GENAI_AVAILABLE = safe_import("google.generativeai", "google-generativeai")
+
+from .models import ProcessingProgress, ProcessingResult, RefinementStyle, ProcessingPrompts
+from .protocols import ProgressCallback, StatusCallback
 
 
 class GeminiProcessor:

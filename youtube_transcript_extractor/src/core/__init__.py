@@ -1,5 +1,9 @@
-"""
-YouTube Transcript Extractor - Core package.
+"""from .models import (
+    ProcessingConfig, ProcessingMode, RefinementStyle, GeminiModels,
+    TranscriptVideo, ProcessingProgress, ProcessingResult
+)
+from .transcript_fetcher import TranscriptFetcher
+from .gemini_processor import GeminiProcessorbe Transcript Extractor - Core package.
 """
 
 from youtube_transcript_extractor.src.core.models import (
