@@ -10,12 +10,16 @@ import tempfile
 import json
 from typing import Generator, Dict, Any, List
 from pathlib import Path
+import sys
 
-from youtube_transcript_extractor.src.core.models import (
+# Add the src directory to the Python path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from core.models import (
     ProcessingConfig, ProcessingMode, RefinementStyle, TranscriptVideo, 
     ProcessingResult, ProcessingProgress
 )
-from youtube_transcript_extractor.src.utils.config import ConfigManager
+from utils.config import ConfigManager
 
 
 # Test data and fixtures

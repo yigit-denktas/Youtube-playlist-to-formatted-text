@@ -64,6 +64,7 @@ class ProcessingResult:
     error_message: Optional[str] = None
     videos_processed: int = 0
     total_videos: int = 0
+    content: Optional[str] = None
 
 
 class ProcessingPrompts:

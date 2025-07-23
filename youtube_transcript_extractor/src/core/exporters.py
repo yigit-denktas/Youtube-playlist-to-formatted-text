@@ -10,7 +10,10 @@ from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
 
-from ..utils.dependencies import safe_import, get_available_export_formats
+try:
+    from ..utils.dependencies import safe_import, get_available_export_formats
+except ImportError:
+    from utils.dependencies import safe_import, get_available_export_formats
 
 # Import optional dependencies using the centralized system
 markdown, MARKDOWN_AVAILABLE = safe_import("markdown", "markdown")

@@ -22,8 +22,15 @@ class SecureConfigManager:
     SERVICE_NAME = "YouTubeTranscriptExtractor"
     CONFIG_FILE = Path.home() / ".yte_config.enc"
     
-    def __init__(self):
-        """Initialize secure configuration manager."""
+    def __init__(self, service_name: Optional[str] = None, username: str = "default_user"):
+        """Initialize secure configuration manager.
+        
+        Args:
+            service_name: Optional service name for keyring storage
+            username: Username for keyring storage
+        """
+        self.service_name = service_name or self.SERVICE_NAME
+        self.username = username
         self.logger = logging.getLogger(__name__)
         self._cipher: Optional[Any] = None
         
@@ -302,6 +309,92 @@ class SecureConfigManager:
             "stored_keys_count": len(self.list_stored_keys()),
             "setup_required": self.is_setup_required()
         }
+
+    # Additional methods expected by tests
+    def store_credential(self, key_name: str, key_value: str) -> bool:
+        """Store credential securely - alias for store_api_key."""
+        return self.store_api_key(key_name, key_value)
+
+    def retrieve_credential(self, key_name: str) -> Optional[str]:
+        """Retrieve credential securely - alias for get_api_key."""
+        return self.get_api_key(key_name)
+
+    def delete_credential(self, key_name: str) -> bool:
+        """Delete credential - alias for delete_api_key."""
+        return self.delete_api_key(key_name)
+
+    def list_stored_credentials(self) -> List[str]:
+        """List stored credentials - alias for list_stored_keys."""
+        return self.list_stored_keys()
+
+    def credential_exists(self, key_name: str) -> bool:
+        """Check if credential exists."""
+        credential = self.get_api_key(key_name)
+        return credential is not None and credential.strip() != ""
+
+    def update_credential(self, key_name: str, key_value: str) -> bool:
+        """Update an existing credential."""
+        if self.credential_exists(key_name):
+            return self.store_api_key(key_name, key_value)
+        return False
+
+    def _generate_key_name(self, base_name: str) -> str:
+        """Generate a key name for storage."""
+        return f"{self.username}_{base_name}"
+
+    def _extract_credential_name(self, key_name: str) -> str:
+        """Extract credential name from storage key."""
+        prefix = f"{self.username}_"
+        if key_name.startswith(prefix):
+            return key_name[len(prefix):]
+        return key_name
+
+    def validate_keyring_availability(self) -> bool:
+        """Validate if keyring is available."""
+        return KEYRING_AVAILABLE
+
+    def get_keyring_backend_info(self) -> Dict[str, Any]:
+        """Get keyring backend information."""
+        if not KEYRING_AVAILABLE or keyring is None:
+            return {"available": False, "backend": None}
+        
+        try:
+            backend = keyring.get_keyring()
+            return {
+                "available": True,
+                "backend": str(type(backend).__name__),
+                "backend_module": str(type(backend).__module__)
+            }
+        except Exception as e:
+            return {"available": False, "error": str(e)}
+
+    def bulk_store_credentials(self, credentials: Dict[str, str]) -> Dict[str, bool]:
+        """Store multiple credentials at once."""
+        results = {}
+        for key_name, key_value in credentials.items():
+            results[key_name] = self.store_api_key(key_name, key_value)
+        return results
+
+    def bulk_retrieve_credentials(self, key_names: List[str]) -> Dict[str, Optional[str]]:
+        """Retrieve multiple credentials at once."""
+        results = {}
+        for key_name in key_names:
+            results[key_name] = self.get_api_key(key_name)
+        return results
+
+    def clear_all_credentials(self) -> bool:
+        """Clear all stored credentials."""
+        try:
+            stored_keys = self.list_stored_keys()
+            success_count = 0
+            for key_name in stored_keys:
+                if self.delete_api_key(key_name):
+                    success_count += 1
+            
+            return success_count == len(stored_keys)
+        except Exception as e:
+            self.logger.error(f"Failed to clear all credentials: {e}")
+            return False
 
 
 class SecureMigrationHelper:

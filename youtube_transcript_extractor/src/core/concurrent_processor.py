@@ -10,7 +10,10 @@ from typing import List, Dict, Any, Optional, Callable, Protocol
 from datetime import datetime
 import time
 
-from ..utils.dependencies import safe_import, is_available
+try:
+    from ..utils.dependencies import safe_import, is_available
+except ImportError:
+    from utils.dependencies import safe_import, is_available
 
 # Import optional dependencies using the centralized system
 aiohttp, AIOHTTP_AVAILABLE = safe_import("aiohttp", "aiohttp")

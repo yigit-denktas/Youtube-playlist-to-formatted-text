@@ -8,7 +8,10 @@ import time
 import logging
 from typing import List, Optional, Callable, Protocol
 
-from ..utils.dependencies import safe_import, require_dependency
+try:
+    from ..utils.dependencies import safe_import, require_dependency
+except ImportError:
+    from utils.dependencies import safe_import, require_dependency
 
 # Import required dependency using the centralized system
 genai, GENAI_AVAILABLE = safe_import("google.generativeai", "google-generativeai")
@@ -22,12 +25,12 @@ class GeminiProcessor:
     
     DEFAULT_CHUNK_SIZE = 3000
     
-    def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash"):
+    def __init__(self, config, progress_callback: Optional[ProgressCallback] = None):
         """Initialize the Gemini processor.
         
         Args:
-            api_key: Google Gemini API key
-            model_name: Name of the Gemini model to use
+            config: Processing configuration containing API key and model settings
+            progress_callback: Optional callback for progress updates
             
         Raises:
             ImportError: If google.generativeai is not installed
@@ -36,11 +39,20 @@ class GeminiProcessor:
         if not GENAI_AVAILABLE:
             raise ImportError("google.generativeai package is required but not installed")
         
+        self.config = config
+        self.progress_callback = progress_callback
+        
+        # Extract API key and model from config
+        if hasattr(config, 'api_key'):
+            api_key = config.api_key
+        else:
+            raise ValueError("Config must have api_key attribute")
+            
         if not api_key or not api_key.strip():
             raise ValueError("API key is required")
         
         self.api_key = api_key.strip()
-        self.model_name = model_name
+        self.model_name = getattr(config, 'gemini_model', 'gemini-2.5-flash')
         self.is_cancelled = False
         self.logger = logging.getLogger(__name__)
         
@@ -352,6 +364,107 @@ class GeminiProcessor:
         except Exception as e:
             self.logger.error(f"Error splitting video file {file_path}: {str(e)}")
             return []
+
+    def _setup_gemini(self) -> None:
+        """Set up Gemini AI configuration and validate connection."""
+        try:
+            if not GENAI_AVAILABLE:
+                raise ImportError("google.generativeai package is required but not installed")
+            
+            # Configure with API key
+            genai.configure(api_key=self.api_key)  # type: ignore
+            
+            # Test the connection by listing models
+            models = genai.list_models()  # type: ignore
+            self.logger.info("Gemini AI setup completed successfully")
+            
+        except Exception as e:
+            error_msg = f"Failed to setup Gemini AI: {str(e)}"
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
+
+    def _get_refinement_prompt(self, refinement_style: RefinementStyle, language: str = "English") -> str:
+        """Get the refinement prompt for the specified style.
+        
+        Args:
+            refinement_style: The refinement style to use
+            language: Target language for the output
+            
+        Returns:
+            Formatted prompt string
+        """
+        prompt_template = ProcessingPrompts.get_prompt(refinement_style)
+        return prompt_template.replace("[Language]", language)
+
+    # Method aliases for backward compatibility with tests
+    def _split_content_into_chunks(self, text: str, chunk_size: int, min_chunk_size: int = 500) -> List[str]:
+        """Alias for _split_text_into_chunks for backward compatibility."""
+        return self._split_text_into_chunks(text, chunk_size, min_chunk_size)
+
+    def process_transcript_chunks(self, chunks: List[str], refinement_style: RefinementStyle, 
+                                output_language: str = "English") -> ProcessingResult:
+        """Process transcript chunks directly (for testing)."""
+        try:
+            results = []
+            for chunk in chunks:
+                prompt_template = ProcessingPrompts.get_prompt(refinement_style)
+                formatted_prompt = prompt_template.replace("[Language]", output_language)
+                full_prompt = f"{formatted_prompt}\n\n{chunk}"
+                
+                model = genai.GenerativeModel(model_name=self.model_name)  # type: ignore
+                response = model.generate_content(full_prompt)  # type: ignore
+                
+                if response and response.text:
+                    results.append(response.text)
+            
+            return ProcessingResult(
+                success=True,
+                content='\n\n'.join(results)
+            )
+        except Exception as e:
+            return ProcessingResult(
+                success=False,
+                error_message=str(e)
+            )
+
+    def process_transcript(self, content: str, refinement_style: RefinementStyle,
+                         output_language: str = "English", chunk_size: int = DEFAULT_CHUNK_SIZE) -> ProcessingResult:
+        """Process a single transcript (for testing)."""
+        try:
+            chunks = self._split_text_into_chunks(content, chunk_size)
+            return self.process_transcript_chunks(chunks, refinement_style, output_language)
+        except Exception as e:
+            return ProcessingResult(
+                success=False,
+                error_message=str(e)
+            )
+
+    def _process_single_chunk(self, chunk: str, refinement_style: RefinementStyle, 
+                            output_language: str = "English") -> ProcessingResult:
+        """Process a single chunk (for testing)."""
+        try:
+            prompt_template = ProcessingPrompts.get_prompt(refinement_style)
+            formatted_prompt = prompt_template.replace("[Language]", output_language)
+            full_prompt = f"{formatted_prompt}\n\n{chunk}"
+            
+            model = genai.GenerativeModel(model_name=self.model_name)  # type: ignore
+            response = model.generate_content(full_prompt)  # type: ignore
+            
+            if not response or not response.text:
+                return ProcessingResult(
+                    success=False,
+                    error_message="Empty response from Gemini"
+                )
+            
+            return ProcessingResult(
+                success=True,
+                content=response.text
+            )
+        except Exception as e:
+            return ProcessingResult(
+                success=False,
+                error_message=str(e)
+            )
 
 
 class GeminiModelValidator:
