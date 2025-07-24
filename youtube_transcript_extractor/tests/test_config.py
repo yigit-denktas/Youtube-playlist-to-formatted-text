@@ -31,8 +31,10 @@ class TestConfigManager:
     
     def test_get_api_key_from_env(self, config_manager_with_env):
         """Test getting API key from environment."""
-        api_key = config_manager_with_env.get_api_key()
-        assert api_key == "test_api_key_from_env"
+        # Mock secure storage to return empty so it falls back to env file
+        with patch.object(config_manager_with_env.secure_manager, 'get_api_key', return_value=""):
+            api_key = config_manager_with_env.get_api_key()
+            assert api_key == "test_api_key_from_env"
     
     def test_get_refinement_style_from_env(self, config_manager_with_env):
         """Test getting refinement style from environment."""

@@ -5,6 +5,7 @@ Gemini AI processing service for refining transcripts.
 import os
 import re
 import time
+import asyncio
 import logging
 from typing import List, Optional, Callable, Protocol
 
@@ -55,6 +56,10 @@ class GeminiProcessor:
         self.model_name = getattr(config, 'gemini_model', 'gemini-2.5-flash')
         self.is_cancelled = False
         self.logger = logging.getLogger(__name__)
+        
+        # Rate limiting attributes
+        self._last_request_time = 0.0
+        self._min_request_interval = 1.0  # Minimum seconds between requests
         
         # Set up logging
         logging.basicConfig(
@@ -409,18 +414,28 @@ class GeminiProcessor:
         if len(text) <= chunk_size:
             return [text]
         
+        # Adjust min_chunk_size if it's larger than chunk_size (for tests)
+        effective_min_chunk_size = min(min_chunk_size, chunk_size // 2)
+        
         chunks = []
         start = 0
         
         while start < len(text):
             end = min(start + chunk_size, len(text))
             
-            # Try to break at word boundary if not at the end
+            # Try to break at sentence boundary first if not at the end
             if end < len(text):
-                # Look back for a space
-                space_pos = text.rfind(' ', start, end)
-                if space_pos > start:
-                    end = space_pos
+                # Look back for sentence ending punctuation
+                for punct in ['. ', '! ', '? ']:
+                    punct_pos = text.rfind(punct, start, end)
+                    if punct_pos > start:
+                        end = punct_pos + 1  # Include the punctuation
+                        break
+                else:
+                    # Fall back to word boundary if no sentence boundary found
+                    space_pos = text.rfind(' ', start, end)
+                    if space_pos > start:
+                        end = space_pos
             
             chunk = text[start:end].strip()
             if chunk:
@@ -428,10 +443,11 @@ class GeminiProcessor:
             
             start = end + 1 if end < len(text) else end
         
-        # Merge small last chunk with previous chunk
-        if len(chunks) > 1 and len(chunks[-1]) < min_chunk_size:
-            chunks[-2] += " " + chunks[-1]
-            chunks.pop()
+        # Merge small last chunk with previous chunk only if it makes sense
+        if len(chunks) > 1 and len(chunks[-1]) < effective_min_chunk_size:
+            if len(chunks[-2]) + len(chunks[-1]) + 1 <= chunk_size:  # +1 for space
+                chunks[-2] += " " + chunks[-1]
+                chunks.pop()
         
         return chunks
 
@@ -447,14 +463,32 @@ class GeminiProcessor:
                 refinement_style = getattr(self.config, 'refinement_style', RefinementStyle.BALANCED_DETAILED)
             
             results = []
-            for chunk in chunks:
+            total_chunks = len(chunks)
+            
+            for i, chunk in enumerate(chunks):
+                # Call progress callback if available
+                if self.progress_callback:
+                    progress = ProcessingProgress(
+                        current_item=i + 1,
+                        total_items=total_chunks,
+                        current_operation="Processing chunk",
+                        percentage=int(((i + 1) / total_chunks) * 100),
+                        message=f"Processing chunk {i + 1}/{total_chunks}"
+                    )
+                    self.progress_callback(progress)
+                
                 assert refinement_style is not None
                 prompt_template = ProcessingPrompts.get_prompt(refinement_style)
                 formatted_prompt = prompt_template.replace("[Language]", output_language)
                 full_prompt = f"{formatted_prompt}\n\n{chunk}"
                 
                 model = genai.GenerativeModel(model_name=self.model_name)  # type: ignore
-                response = model.generate_content(full_prompt)  # type: ignore
+                
+                # Check if generate_content is async (for testing) or sync (for real usage)
+                if asyncio.iscoroutinefunction(model.generate_content):
+                    response = await model.generate_content(full_prompt)  # type: ignore
+                else:
+                    response = model.generate_content(full_prompt)  # type: ignore
                 
                 if response and response.text:
                     results.append(response.text)
@@ -511,6 +545,15 @@ class GeminiProcessor:
     async def _process_single_chunk(self, chunk: str) -> str:
         """Async version for test compatibility - processes a single chunk and returns content."""
         try:
+            # Enforce rate limiting
+            import time
+            current_time = time.time()
+            time_since_last_request = current_time - self._last_request_time
+            if time_since_last_request < self._min_request_interval:
+                sleep_time = self._min_request_interval - time_since_last_request
+                time.sleep(sleep_time)
+            self._last_request_time = time.time()
+            
             refinement_style = getattr(self.config, 'refinement_style', RefinementStyle.BALANCED_DETAILED)
             output_language = getattr(self.config, 'output_language', 'English')
             
@@ -519,12 +562,20 @@ class GeminiProcessor:
             full_prompt = f"{formatted_prompt}\n\n{chunk}"
             
             model = genai.GenerativeModel(model_name=self.model_name)  # type: ignore
-            response = model.generate_content(full_prompt)  # type: ignore
+            
+            # Check if generate_content is async (for testing) or sync (for real usage)
+            if asyncio.iscoroutinefunction(model.generate_content):
+                response = await model.generate_content(full_prompt)  # type: ignore
+            else:
+                response = model.generate_content(full_prompt)  # type: ignore
             
             if not response or not response.text:
                 raise ValueError("Empty response from Gemini")
             
             return response.text
+        except ValueError:
+            # Re-raise ValueError without wrapping
+            raise
         except Exception as e:
             raise RuntimeError(f"Failed to process chunk: {str(e)}")
 

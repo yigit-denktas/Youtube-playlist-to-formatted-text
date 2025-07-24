@@ -71,9 +71,9 @@ class ProcessingPrompts:
     """Container for all processing prompts."""
     
     PROMPTS = {
-        RefinementStyle.BALANCED_DETAILED: """Turn the following unorganized text into a well-structured, readable format while retaining EVERY detail, context, and nuance of the original content.
-    Refine the text to improve clarity, grammar, and coherence WITHOUT cutting, summarizing, or omitting any information.
-    The goal is to make the content easier to read and process by:
+        RefinementStyle.BALANCED_DETAILED: """Turn the following unorganized transcript text into a well-structured, readable format while retaining EVERY detail, context, and nuance of the original content.
+    Refine the transcript to improve clarity, grammar, and coherence WITHOUT cutting, summarizing, or omitting any information.
+    The goal is to make the transcript content easier to read and process by:
 
     - Organizing the content into logical sections with appropriate subheadings.
     - Using bullet points or numbered lists where applicable to present facts, stats, or comparisons.
@@ -81,10 +81,10 @@ class ProcessingPrompts:
     - Preserving the original tone, humor, and narrative style while ensuring readability.
     - Adding clear separators or headings for topic shifts to improve navigation.
 
-    Ensure the text remains informative, capturing the original intent, tone, and details while presenting the information in a format optimized for analysis by both humans and AI.
-    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text in your response.
+    Ensure the transcript remains informative, capturing the original intent, tone, and details while presenting the information in a format optimized for analysis by both humans and AI.
+    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized transcript text in your response.
 
-    Text:""",
+    Transcript Text:""",
 
         RefinementStyle.SUMMARY: """Summarize the following transcript into a concise and informative summary. 
     Identify the core message, main arguments, and key pieces of information presented in the video.
@@ -102,17 +102,17 @@ class ProcessingPrompts:
 
     Ensure the text is highly informative, accurate, and retains all the original details and nuances of the transcript. The goal is to create a valuable educational resource that is easy to study and understand. You can create and include diagrams using Mermaid.js syntax to illustrate complex concepts or processes. Whenever you add a diagram, wrap the ```mermaid code block inside `<div align="center">` and `</div>`, start the block with a descriptive `%% Figure 1 - Title` (or nested `%% Figure 1.1 - Title` when context requires), keep diagrams concise (≤ 15 nodes), and follow each diagram with one-to-two explanatory sentences.
 
-    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text in your response.
+    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized transcript text in your response.
 
-    Text:""",
+    Transcript:""",
 
         RefinementStyle.NARRATIVE_REWRITING: """Rewrite the following transcript into an engaging narrative or story format. Transform the factual or conversational content into a more captivating and readable piece, similar to a short story or narrative article.
 
     While rewriting, maintain a close adherence to the original subjects and information presented in the video. Do not deviate significantly from the core topics or introduce unrelated elements. The goal is to enhance engagement and readability through storytelling techniques without altering the fundamental content or message of the video. Use narrative elements like descriptive language, scene-setting (if appropriate), and a compelling flow to make the information more accessible and enjoyable.
 
-    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text in your response.
+    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized transcript text in your response.
 
-    Text:""",
+    Transcript:""",
 
         RefinementStyle.QA_GENERATION: """Generate a set of questions and answers based on the following transcript for self-assessment or review. For each question, create a corresponding answer.
 
@@ -120,9 +120,9 @@ class ProcessingPrompts:
 
     Ensure the questions are relevant to the key information and concepts in the transcript and that the answers are accurate and comprehensive based on the video content.
 
-    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized text in your response.
+    All output must be generated entirely in [Language]. Do not use any other language at any point in the response. Do not include this unorganized transcript text in your response.
 
-    Text:"""
+    Transcript:"""
     }
 
     CATEGORY_CHUNK_SIZES = {
