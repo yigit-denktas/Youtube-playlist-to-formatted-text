@@ -14,14 +14,18 @@ from .dependencies import safe_import
 # Import core models safely
 ProcessingConfig, models_available = safe_import("core.models.ProcessingConfig")
 ProcessingMode, _ = safe_import("core.models.ProcessingMode")
-RefinementStyle, _ = safe_import("core.models.RefinementStyle")
 GeminiModels, _ = safe_import("core.models.GeminiModels")
+
+# Import RefinementStyle directly to ensure availability
+try:
+    from ..core.models import RefinementStyle
+except ImportError:
+    RefinementStyle = None
 
 # Provide fallbacks if models can't be imported
 if not models_available:
     ProcessingConfig = None
     ProcessingMode = None
-    RefinementStyle = None
     GeminiModels = None
 
 

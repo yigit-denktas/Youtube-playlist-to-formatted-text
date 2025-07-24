@@ -114,15 +114,26 @@ class MarkdownExporter(ExporterBase):
         """
         formatted_content = []
         
-        # Add metadata header
+        # Add title as main heading if available in metadata
+        if metadata and "title" in metadata:
+            formatted_content.append(f"# {metadata['title']}")
+            formatted_content.append("")
+        elif not metadata or "title" not in metadata:
+            # Default title when no title in metadata
+            formatted_content.append("# YouTube Transcript Export")
+            formatted_content.append("")
+        
+        # Add other metadata as a section
         if metadata:
             formatted_content.append("---")
             formatted_content.append("# Document Metadata")
             formatted_content.append("")
             
             for key, value in metadata.items():
-                if key == "source_url":
-                    formatted_content.append(f"**Source:** [{value}]({value})")
+                if key == "title":
+                    continue  # Already added as main heading
+                elif key == "source_url":
+                    formatted_content.append(f"**Source URL:** {value}")
                 elif key == "generated_at":
                     formatted_content.append(f"**Generated:** {value}")
                 elif key == "total_videos":

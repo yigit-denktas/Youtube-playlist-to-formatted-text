@@ -18,6 +18,12 @@ except ImportError:
 # Import optional dependencies using the centralized system
 aiohttp, AIOHTTP_AVAILABLE = safe_import("aiohttp", "aiohttp")
 retry, TENACITY_AVAILABLE = safe_import("tenacity.retry", "tenacity")
+
+# Import Playlist for mocking support
+try:
+    from pytube import Playlist  # type: ignore
+except ImportError:
+    Playlist = None
 if TENACITY_AVAILABLE:
     stop_after_attempt, _ = safe_import("tenacity.stop_after_attempt", "tenacity")
     wait_exponential, _ = safe_import("tenacity.wait_exponential", "tenacity")
@@ -404,8 +410,9 @@ class ConcurrentPlaylistProcessor:
         """
         try:
             # First, get all videos in the playlist
-            from pytube import Playlist  # type: ignore
-            
+            if not Playlist:
+                raise ImportError("pytube not available")
+                
             self.logger.info(f"Extracting video list from playlist: {playlist_url}")
             playlist = Playlist(playlist_url)
             

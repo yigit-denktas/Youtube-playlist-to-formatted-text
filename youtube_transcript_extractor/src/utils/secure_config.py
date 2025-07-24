@@ -55,10 +55,10 @@ class SecureConfigManager:
             if keyring is None or Fernet is None:
                 return None
                 
-            key = keyring.get_password(self.SERVICE_NAME, "encryption_key")
+            key = keyring.get_password(self.service_name, "encryption_key")
             if not key:
                 key = Fernet.generate_key().decode()
-                keyring.set_password(self.SERVICE_NAME, "encryption_key", key)
+                keyring.set_password(self.service_name, "encryption_key", key)
             return Fernet(key.encode())
         except Exception as e:
             self.logger.error(f"Failed to create cipher: {e}")
@@ -79,7 +79,8 @@ class SecureConfigManager:
             return False
             
         try:
-            keyring.set_password(self.SERVICE_NAME, key_name, key_value)
+            full_key_name = self._generate_key_name(key_name)
+            keyring.set_password(self.service_name, full_key_name, key_value)
             self.logger.info(f"Successfully stored API key: {key_name}")
             self._update_stored_keys_list(key_name, 'add')
             return True
@@ -101,7 +102,8 @@ class SecureConfigManager:
             return None
             
         try:
-            key = keyring.get_password(self.SERVICE_NAME, key_name)
+            full_key_name = self._generate_key_name(key_name)
+            key = keyring.get_password(self.service_name, full_key_name)
             if key:
                 self.logger.debug(f"Successfully retrieved API key: {key_name}")
             return key
@@ -123,7 +125,8 @@ class SecureConfigManager:
             return False
             
         try:
-            keyring.delete_password(self.SERVICE_NAME, key_name)
+            full_key_name = self._generate_key_name(key_name)
+            keyring.delete_password(self.service_name, full_key_name)
             self.logger.info(f"Successfully deleted API key: {key_name}")
             self._update_stored_keys_list(key_name, 'remove')
             return True

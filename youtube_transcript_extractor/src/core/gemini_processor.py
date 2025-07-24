@@ -56,9 +56,6 @@ class GeminiProcessor:
         self.is_cancelled = False
         self.logger = logging.getLogger(__name__)
         
-        # Configure Gemini
-        genai.configure(api_key=self.api_key)  # type: ignore
-        
         # Set up logging
         logging.basicConfig(
             filename='gemini_processing.log', 
@@ -374,6 +371,9 @@ class GeminiProcessor:
             # Configure with API key
             genai.configure(api_key=self.api_key)  # type: ignore
             
+            # Initialize the model
+            self.model = genai.GenerativeModel(self.model_name)  # type: ignore
+            
             # Test the connection by listing models
             models = genai.list_models()  # type: ignore
             self.logger.info("Gemini AI setup completed successfully")
@@ -435,9 +435,37 @@ class GeminiProcessor:
         
         return chunks
 
-    def process_transcript_chunks(self, chunks: List[str], refinement_style: Optional[RefinementStyle] = None, 
-                                output_language: str = "English") -> ProcessingResult:
-        """Process transcript chunks directly (for testing)."""
+    async def process_transcript_chunks(self, chunks, refinement_style: Optional[RefinementStyle] = None, 
+                                output_language: str = "English") -> str:
+        """Process transcript chunks directly (async version for tests)."""
+        try:
+            if isinstance(chunks, str):
+                # If a string is passed, treat it as content to be chunked
+                chunks = self._split_text_into_chunks(chunks, 3000)
+            
+            if refinement_style is None:
+                refinement_style = getattr(self.config, 'refinement_style', RefinementStyle.BALANCED_DETAILED)
+            
+            results = []
+            for chunk in chunks:
+                assert refinement_style is not None
+                prompt_template = ProcessingPrompts.get_prompt(refinement_style)
+                formatted_prompt = prompt_template.replace("[Language]", output_language)
+                full_prompt = f"{formatted_prompt}\n\n{chunk}"
+                
+                model = genai.GenerativeModel(model_name=self.model_name)  # type: ignore
+                response = model.generate_content(full_prompt)  # type: ignore
+                
+                if response and response.text:
+                    results.append(response.text)
+            
+            return '\n\n'.join(results)
+        except Exception as e:
+            raise RuntimeError(f"Failed to process chunks: {str(e)}")
+
+    def process_transcript_chunks_sync(self, chunks: List[str], refinement_style: Optional[RefinementStyle] = None, 
+                                      output_language: str = "English") -> ProcessingResult:
+        """Process transcript chunks directly (sync version for internal use)."""
         try:
             if refinement_style is None:
                 refinement_style = getattr(self.config, 'refinement_style', RefinementStyle.BALANCED_DETAILED)
@@ -466,14 +494,14 @@ class GeminiProcessor:
             )
 
     def process_transcript(self, content: str, refinement_style: Optional[RefinementStyle] = None,
-                         output_language: str = "English", chunk_size: int = DEFAULT_CHUNK_SIZE) -> ProcessingResult:
+                         output_language: str = "English", chunk_size: int = 3000) -> ProcessingResult:
         """Process a single transcript (for testing)."""
         try:
             if refinement_style is None:
                 refinement_style = getattr(self.config, 'refinement_style', RefinementStyle.BALANCED_DETAILED)
             
             chunks = self._split_text_into_chunks(content, chunk_size)
-            return self.process_transcript_chunks(chunks, refinement_style, output_language)
+            return self.process_transcript_chunks_sync(chunks, refinement_style, output_language)
         except Exception as e:
             return ProcessingResult(
                 success=False,

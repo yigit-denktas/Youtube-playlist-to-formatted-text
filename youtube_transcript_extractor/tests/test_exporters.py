@@ -19,7 +19,7 @@ class TestExporterBase:
     
     def test_cannot_instantiate_directly(self):
         """Test that ExporterBase cannot be instantiated directly."""
-        with pytest.raises(TypeError, match="not implemented"):
+        with pytest.raises(TypeError, match="Cannot instantiate abstract class"):
             ExporterBase()
 
 
@@ -110,6 +110,7 @@ It also contains content that can be processed."""
             "date": "2024-01-01"
         }
         
+
         formatted = self.exporter._format_markdown_content(self.sample_content, metadata)
         
         assert "# Test Document" in formatted

@@ -7,7 +7,7 @@ import os
 from unittest.mock import patch, mock_open
 
 from youtube_transcript_extractor.src.utils.config import ConfigManager, DefaultPaths
-from youtube_transcript_extractor.src.core.models import RefinementStyle, GeminiModels
+from youtube_transcript_extractor.src.core.models import GeminiModels, RefinementStyle
 
 
 class TestConfigManager:
