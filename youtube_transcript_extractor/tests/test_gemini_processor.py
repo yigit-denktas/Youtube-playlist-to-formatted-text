@@ -187,7 +187,7 @@ class TestGeminiProcessor:
         processor._setup_gemini()
         
         short_content = "Short transcript content."
-        result = await processor.process_transcript(short_content)
+        result = await processor.process_transcript_chunks(short_content)
         
         assert result == "Refined single chunk"
     

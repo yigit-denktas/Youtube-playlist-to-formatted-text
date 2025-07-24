@@ -100,7 +100,7 @@ class TestTranscriptFetcher:
         assert result.success is False
         assert result.url == url
         assert result.content == ""
-        assert "No transcript available" in result.error_message
+        assert result.error_message is not None and "No transcript available" in result.error_message
     
     @pytest.mark.asyncio
     async def test_fetch_single_video_invalid_url(self):
@@ -111,7 +111,7 @@ class TestTranscriptFetcher:
         assert isinstance(result, TranscriptVideo)
         assert result.success is False
         assert result.url == url
-        assert "Invalid YouTube URL" in result.error_message
+        assert result.error_message is not None and "Invalid YouTube URL" in result.error_message
     
     @patch('youtube_transcript_extractor.src.core.transcript_fetcher.build')
     @patch('youtube_transcript_extractor.src.core.transcript_fetcher.youtube_transcript_api')
@@ -166,7 +166,7 @@ class TestTranscriptFetcher:
         
         assert len(results) == 1
         assert results[0].success is False
-        assert "API key invalid" in results[0].error_message
+        assert results[0].error_message is not None and "API key invalid" in results[0].error_message
     
     @pytest.mark.asyncio
     async def test_fetch_playlist_videos_invalid_url(self):
@@ -176,7 +176,7 @@ class TestTranscriptFetcher:
         
         assert len(results) == 1
         assert results[0].success is False
-        assert "Invalid playlist URL" in results[0].error_message
+        assert results[0].error_message is not None and "Invalid playlist URL" in results[0].error_message
     
     def test_extract_playlist_id(self):
         """Test extracting playlist ID from URL."""

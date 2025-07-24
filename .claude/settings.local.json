@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ide__getDiagnostics",
+      "Bash(python -m pylint:*)",
+      "Bash(python -m pytest youtube_transcript_extractor/tests/test_transcript_fetcher.py::TestTranscriptFetcher::test_fetch_single_video_failure -v)",
+      "Bash(python -m pytest youtube_transcript_extractor/tests/test_transcript_fetcher.py::TestTranscriptFetcher::test_fetch_single_video_invalid_url -v)",
+      "Bash(python -m pytest youtube_transcript_extractor/tests/test_exporters.py::TestExporterBase::test_cannot_instantiate_directly -v)",
+      "Bash(python -m pytest youtube_transcript_extractor/tests/test_transcript_fetcher.py -v)"
+    ],
+    "deny": []
+  }
+}

@@ -20,6 +20,13 @@ markdown, MARKDOWN_AVAILABLE = safe_import("markdown", "markdown")
 
 # ReportLab imports
 SimpleDocTemplate, REPORTLAB_AVAILABLE = safe_import("reportlab.platypus.SimpleDocTemplate", "reportlab")
+letter = None
+Paragraph = None
+Spacer = None
+getSampleStyleSheet = None
+ParagraphStyle = None
+inch = None
+
 if REPORTLAB_AVAILABLE:
     letter, _ = safe_import("reportlab.lib.pagesizes.letter", "reportlab")
     Paragraph, _ = safe_import("reportlab.platypus.Paragraph", "reportlab")
@@ -150,6 +157,7 @@ class MarkdownExporter(ExporterBase):
         # Process content for better Markdown formatting
         lines = content.split('\n')
         in_transcript_section = False
+        video_count = 0
         
         for line in lines:
             line = line.strip()
@@ -161,8 +169,11 @@ class MarkdownExporter(ExporterBase):
             # Detect video URLs and make them proper headers
             if line.startswith("Video URL:"):
                 url = line.replace("Video URL:", "").strip()
+                video_count += 1
                 formatted_content.append("")
-                formatted_content.append(f"## 📹 [{url}]({url})")
+                formatted_content.append(f"## Video {video_count}")
+                formatted_content.append("")
+                formatted_content.append(f"🎥 [{url}]({url})")
                 formatted_content.append("")
                 in_transcript_section = True
                 continue
@@ -209,16 +220,13 @@ class MarkdownExporter(ExporterBase):
             List of TOC lines
         """
         toc_lines = ["## 📋 Table of Contents", ""]
-        video_count = 0
         
         for line in content_lines:
-            if line.startswith("## 📹"):
-                video_count += 1
-                # Extract URL from markdown link
-                if "](" in line and ")" in line:
-                    url = line.split("](")[1].split(")")[0]
-                    video_title = f"Video {video_count}"
-                    toc_lines.append(f"{video_count}. [{video_title}]({url})")
+            if line.startswith("## ") and not line.startswith("## 📋"):
+                # Extract header text and create anchor link
+                header_text = line[3:].strip()  # Remove "## "
+                anchor = header_text.lower().replace(" ", "-").replace("[", "").replace("]", "").replace("(", "").replace(")", "")
+                toc_lines.append(f"- [{header_text}](#{anchor})")
         
         toc_lines.extend(["", "---", ""])
         return toc_lines
@@ -257,9 +265,15 @@ class PDFExporter(ExporterBase):
             elif output_path.suffix.lower() != '.pdf':
                 output_path = output_path.with_suffix('.pdf')
             
+            # Check that all required imports are available
+            if not SimpleDocTemplate:
+                raise ImportError("ReportLab SimpleDocTemplate not available")
+            
             # Create PDF
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            doc = SimpleDocTemplate(str(output_path), pagesize=letter)
+            # Use letter if available, otherwise use a default size
+            page_size = letter if letter else (8.5*72, 11*72)  # Default letter size in points
+            doc = SimpleDocTemplate(str(output_path), pagesize=page_size)
             
             # Build content
             story = self._build_pdf_story(content, metadata)

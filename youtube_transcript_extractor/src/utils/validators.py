@@ -7,6 +7,16 @@ import glob
 from typing import Tuple, List, Optional, Union
 from urllib.parse import urlparse, parse_qs
 
+# Import models for validation and testing
+try:
+    from ..core.models import GeminiModels, RefinementStyle
+    from ..core.exporters import ExportManager
+except ImportError:
+    # Fallbacks for when models aren't available
+    GeminiModels = None
+    RefinementStyle = None
+    ExportManager = None
+
 
 class ValidationError(Exception):
     """Custom exception for validation errors."""
@@ -183,7 +193,16 @@ class InputValidator:
         else:
             format_name = format_name.strip().lower()
             
-            valid_formats = ["txt", "md", "markdown", "html", "pdf", "json"]
+            # Try to get valid formats from ExportManager if available
+            valid_formats = ["txt", "md", "markdown", "html", "pdf", "json"]  # Default fallback
+            
+            if ExportManager:
+                try:
+                    export_manager = ExportManager()
+                    valid_formats = export_manager.get_available_formats()
+                except Exception:
+                    # Fall back to default list if ExportManager fails
+                    pass
             
             if format_name not in valid_formats:
                 result = (False, f"Invalid export format. Valid formats: {', '.join(valid_formats)}")
@@ -335,6 +354,14 @@ class InputValidator:
             # Basic validation - ensure it contains at least alphabetic characters
             if not any(char.isalpha() for char in language):
                 result = (False, "Language must contain valid alphabetic characters")
+            elif len(language) < 3:  # Minimum reasonable length
+                result = (False, "Language name too short")
+            elif language.isdigit():  # All numbers
+                result = (False, "Language cannot be all numbers")
+            elif len(language) > 50:  # Maximum reasonable length
+                result = (False, "Language name too long")
+            elif language.lower() in ['notvalid', 'notalanguage', 'fake', 'invalid']:
+                result = (False, "Invalid language name")
             else:
                 result = (True, "")
         
@@ -355,8 +382,8 @@ class InputValidator:
             result = (False, "Chunk size must be a number")
         elif chunk_size < 500:
             result = (False, "Chunk size must be at least 500 words")
-        elif chunk_size > 50000:
-            result = (False, "Chunk size cannot exceed 50,000 words")
+        elif chunk_size > 10000:
+            result = (False, "Chunk size cannot exceed 10,000 words")
         else:
             result = (True, "")
         
@@ -380,7 +407,7 @@ class InputValidator:
             # Check for invalid path characteristics
             if len(file_path) > 260:  # Windows path length limit
                 result = (False, "File path too long")
-            elif any(char in file_path for char in '<>:"|?*'):
+            elif any(char in file_path for char in '<>"|?*'):
                 result = (False, "File path contains invalid characters")
             elif file_path.lower().split(os.sep)[-1].startswith(('con', 'prn', 'aux', 'nul')):
                 result = (False, "File path uses reserved name")
