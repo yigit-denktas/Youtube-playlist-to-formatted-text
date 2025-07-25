@@ -261,6 +261,24 @@ class SecureConfigManager:
             List of API key names stored in keyring
         """
         try:
+            # Try to get credentials from keyring backend first
+            if KEYRING_AVAILABLE:
+                try:
+                    backend = keyring.get_keyring()
+                    if hasattr(backend, 'get_all_credentials'):
+                        credentials = backend.get_all_credentials()
+                        keys = []
+                        for cred in credentials:
+                            if cred.service == self.service_name and cred.username.startswith(f"{self.username}_"):
+                                # Extract the key name from username
+                                key_name = self._extract_credential_name(cred.username)
+                                if key_name:  # Only add if extraction was successful
+                                    keys.append(key_name)
+                        return keys
+                except Exception as e:
+                    self.logger.debug(f"Could not list from keyring backend: {e}")
+            
+            # Fallback to config file
             config = self.load_config()
             return config.get('stored_keys', [])
         except Exception as e:
@@ -345,12 +363,12 @@ class SecureConfigManager:
         """Generate a key name for storage."""
         return f"{self.username}_{base_name}"
 
-    def _extract_credential_name(self, key_name: str) -> str:
+    def _extract_credential_name(self, key_name: str) -> Optional[str]:
         """Extract credential name from storage key."""
         prefix = f"{self.username}_"
         if key_name.startswith(prefix):
             return key_name[len(prefix):]
-        return key_name
+        return None
 
     def validate_keyring_availability(self) -> bool:
         """Validate if keyring is available."""
