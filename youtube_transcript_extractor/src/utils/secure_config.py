@@ -372,7 +372,15 @@ class SecureConfigManager:
 
     def validate_keyring_availability(self) -> bool:
         """Validate if keyring is available."""
-        return KEYRING_AVAILABLE
+        if not KEYRING_AVAILABLE or keyring is None:
+            return False
+        
+        try:
+            # Try to actually get the keyring backend
+            backend = keyring.get_keyring()
+            return backend is not None
+        except Exception:
+            return False
 
     def get_keyring_backend_info(self) -> Dict[str, Any]:
         """Get keyring backend information."""
@@ -381,13 +389,19 @@ class SecureConfigManager:
         
         try:
             backend = keyring.get_keyring()
-            return {
+            info = {
                 "available": True,
                 "backend": str(type(backend).__name__),
                 "backend_module": str(type(backend).__module__)
             }
+            
+            # Add priority if available
+            if hasattr(backend, 'priority'):
+                info["priority"] = backend.priority
+                
+            return info
         except Exception as e:
-            return {"available": False, "error": str(e)}
+            return {}
 
     def bulk_store_credentials(self, credentials: Dict[str, str]) -> Dict[str, bool]:
         """Store multiple credentials at once."""
@@ -403,8 +417,12 @@ class SecureConfigManager:
             results[key_name] = self.get_api_key(key_name)
         return results
 
-    def clear_all_credentials(self) -> bool:
-        """Clear all stored credentials."""
+    def clear_all_credentials(self) -> int:
+        """Clear all stored credentials.
+        
+        Returns:
+            Number of credentials cleared
+        """
         try:
             stored_keys = self.list_stored_keys()
             success_count = 0
@@ -412,10 +430,10 @@ class SecureConfigManager:
                 if self.delete_api_key(key_name):
                     success_count += 1
             
-            return success_count == len(stored_keys)
+            return success_count
         except Exception as e:
             self.logger.error(f"Failed to clear all credentials: {e}")
-            return False
+            return 0
 
 
 class SecureMigrationHelper:
