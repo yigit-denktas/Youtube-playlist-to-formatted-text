@@ -83,15 +83,21 @@ class RateLimiter:
         async with self.lock:
             now = time.time()
             elapsed = now - self.last_update
+            
+            # Add tokens based on elapsed time, but cap at rate
             self.tokens = min(self.rate, self.tokens + elapsed * self.rate)
             self.last_update = now
             
-            if self.tokens < 1:
+            if self.tokens >= 1:
+                # We have tokens available
+                self.tokens -= 1
+            else:
+                # Need to wait for a token
                 wait_time = (1 - self.tokens) / self.rate
                 await asyncio.sleep(wait_time)
+                # After waiting, set tokens to 0 and update last_update
                 self.tokens = 0
-            else:
-                self.tokens -= 1
+                self.last_update = time.time()
 
 
 class ConcurrentTranscriptFetcher:

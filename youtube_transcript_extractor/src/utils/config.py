@@ -15,13 +15,31 @@ from .dependencies import safe_import
 ProcessingConfig, models_available = safe_import("core.models.ProcessingConfig")
 ProcessingMode, _ = safe_import("core.models.ProcessingMode")
 GeminiModels, _ = safe_import("core.models.GeminiModels")
-RefinementStyle, _ = safe_import("core.models.RefinementStyle")
+
+# Import RefinementStyle using the most reliable method
+RefinementStyle = None
+refinement_style_available = False
+
+try:
+    # This works in direct testing
+    from core.models import RefinementStyle
+    refinement_style_available = True
+except ImportError:
+    try:
+        # Fallback for relative imports
+        from ..core.models import RefinementStyle
+        refinement_style_available = True
+    except ImportError:
+        RefinementStyle = None
+        refinement_style_available = False
 
 # Provide fallbacks if models can't be imported
 if not models_available:
     ProcessingConfig = None
     ProcessingMode = None
     GeminiModels = None
+
+# RefinementStyle fallback is handled above
 
 
 class ConfigManager:
@@ -101,14 +119,14 @@ class ConfigManager:
         if not RefinementStyle:
             return "Balanced and Detailed"  # Fallback string
             
-        style_name = self.get_env_value("REFINEMENT_STYLE", "Balanced and Detailed")
+        style_name = self.get_env_value("REFINEMENT_STYLE", "Summary")
         
         # Try to match the environment value to a RefinementStyle
         for style in RefinementStyle:
             if style.value == style_name:
                 return style
         
-        return getattr(RefinementStyle, 'BALANCED_DETAILED', "Balanced and Detailed")
+        return getattr(RefinementStyle, 'SUMMARY', "Summary")
     
     def get_chunk_size(self) -> int:
         """Get chunk size from environment or default."""

@@ -209,7 +209,7 @@ class TestJobManagement:
         
         result = self.runner.invoke(cli, ['list-jobs'])
         assert result.exit_code == 0
-        assert 'test_job_' in result.output
+        assert 'test_job' in result.output  # Check for partial ID (table may truncate)
         assert 'completed' in result.output
     
     @patch('youtube_transcript_extractor.src.cli.YTECli')

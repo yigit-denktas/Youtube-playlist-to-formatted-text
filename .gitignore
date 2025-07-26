@@ -99,6 +99,12 @@ ipython_config.py
 .vscode/
 *.code-workspace
 
+# AI Agent Files
+GEMINI.md
+.claude/
+CLAUDE.md
+QWEN.md
+
 # Windows
 Thumbs.db
 Thumbs.db:encryptable

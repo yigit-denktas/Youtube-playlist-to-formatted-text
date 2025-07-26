@@ -136,18 +136,20 @@ class TestSecureConfigManager:
         """Test listing credentials when backend doesn't support it."""
         mock_keyring.get_keyring.return_value = Mock(spec=[])  # No get_all_credentials
         
-        result = self.manager.list_stored_credentials()
-        
-        assert result == []
+        # Mock load_config to return empty config to avoid fallback
+        with patch.object(self.manager, 'load_config', return_value={}):
+            result = self.manager.list_stored_credentials()
+            assert result == []
     
     @patch('youtube_transcript_extractor.src.utils.secure_config.keyring')
     def test_list_stored_credentials_failure(self, mock_keyring):
         """Test listing credentials failure."""
         mock_keyring.get_keyring.side_effect = Exception("Backend error")
         
-        result = self.manager.list_stored_credentials()
-        
-        assert result == []
+        # Mock load_config to return empty config to avoid fallback
+        with patch.object(self.manager, 'load_config', return_value={}):
+            result = self.manager.list_stored_credentials()
+            assert result == []
     
     @patch('youtube_transcript_extractor.src.utils.secure_config.keyring')
     def test_credential_exists_true(self, mock_keyring):

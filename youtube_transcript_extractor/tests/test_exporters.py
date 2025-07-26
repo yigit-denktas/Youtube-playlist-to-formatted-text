@@ -145,24 +145,15 @@ It also contains content that can be processed."""
     
     def test_export_failure_permission_error(self, temp_dir):
         """Test handling of permission errors during export."""
-        # Create a file and make parent directory read-only
+        # Mock open to raise a PermissionError instead of relying on filesystem permissions
+        # This ensures the test works consistently across platforms
         output_path = Path(temp_dir) / "readonly" / "test.md"
         output_path.parent.mkdir()
         
-        # Make directory read-only (Windows compatible approach)
-        try:
-            os.chmod(output_path.parent, 0o444)
+        # Mock the builtin open function to raise PermissionError
+        with patch('builtins.open', side_effect=PermissionError("Permission denied")):
             result = self.exporter.export(self.sample_content, output_path)
             assert result is False
-        except (OSError, PermissionError):
-            # Expected on some systems
-            pass
-        finally:
-            # Restore permissions for cleanup
-            try:
-                os.chmod(output_path.parent, 0o777)
-            except (OSError, PermissionError):
-                pass
 
 
 @pytest.mark.unit

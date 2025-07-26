@@ -539,7 +539,10 @@ def resume(ctx, job_id, force):
         
         if not matching_job:
             console.print(f"[red]Error:[/red] Job not found: {job_id}")
-            ctx.exit(1)
+            result = {'success': False, 'error': f'Job not found: {job_id}'}
+            if not quiet:
+                console.print(f"[red]✗ Resume failed:[/red] {result.get('error', 'Unknown error')}")
+            raise click.Abort()
         
         # At this point matching_job should be valid, but let's add a safety check
         if matching_job and 'id' in matching_job:
@@ -555,6 +558,9 @@ def resume(ctx, job_id, force):
         else:
             console.print(f"[red]✗ Resume failed:[/red] {result.get('error', 'Unknown error')}")
             
+    except click.Abort:
+        # Re-raise Click exceptions (like Abort) to preserve exit codes
+        raise
     except Exception as e:
         console.print(f"[red]Error:[/red] {str(e)}")
         logger.exception("Error resuming job")

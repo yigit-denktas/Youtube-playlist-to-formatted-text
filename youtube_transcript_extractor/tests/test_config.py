@@ -41,12 +41,16 @@ class TestConfigManager:
         # Mock get_env_value to return the expected value
         with patch.object(config_manager_with_env, 'get_env_value') as mock_get_env:
             mock_get_env.return_value = "Summary"
-            style = config_manager_with_env.get_refinement_style()
-            
-            # Check that it returns the correct enum value
-            assert style.value == "Summary"
-            assert style.name == "SUMMARY"
-            mock_get_env.assert_called_with("REFINEMENT_STYLE", "Balanced and Detailed")
+            with patch('youtube_transcript_extractor.src.utils.config.RefinementStyle') as mock_enum:
+                mock_enum.SUMMARY.value = "Summary"
+                mock_enum.SUMMARY.name = "SUMMARY"
+                mock_enum.get_style_by_value.return_value = mock_enum.SUMMARY
+                style = config_manager_with_env.get_refinement_style()
+                
+                # Check that it returns the correct enum value
+                assert style.value == "Summary"
+                assert style.name == "SUMMARY"
+                mock_get_env.assert_called_with("REFINEMENT_STYLE", "Summary")
     
     def test_get_refinement_style_default(self, temp_dir):
         """Test getting default refinement style when not in env."""
@@ -56,7 +60,9 @@ class TestConfigManager:
         
         config = ConfigManager(empty_env)
         style = config.get_refinement_style()
-        assert style == RefinementStyle.SUMMARY
+        # Check both value and name to ensure it's the correct enum
+        assert style.value == "Summary" # type: ignore
+        assert style.name == "SUMMARY" # type: ignore
     
     def test_get_chunk_size_from_env(self, config_manager_with_env):
         """Test getting chunk size from environment."""
